@@ -240,6 +240,15 @@ body {
   gap: 1rem;
 }
 
+.form-row.meal-row {
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.form-row.meal-row .select-wrapper select {
+  min-width: 100px;
+}
+
 .input-wrapper {
   position: relative;
 }

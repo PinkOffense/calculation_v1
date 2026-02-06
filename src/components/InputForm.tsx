@@ -164,20 +164,36 @@ export default function InputForm({ input, onChange }: InputFormProps) {
 
           <div className="form-group">
             <label htmlFor="mealAllowance">Subsídio de Alimentação / dia</label>
-            <div className="input-wrapper currency-input">
-              <input
-                id="mealAllowance"
-                type="number"
-                min="0"
-                max="20"
-                step="0.10"
-                value={input.mealAllowancePerDay || ''}
-                onChange={(e) => update('mealAllowancePerDay', Math.max(0, Number(e.target.value)))}
-                placeholder="6.00"
-              />
-              <span className="input-suffix">€</span>
+            <div className="form-row meal-row">
+              <div className="input-wrapper currency-input">
+                <input
+                  id="mealAllowance"
+                  type="number"
+                  min="0"
+                  max="20"
+                  step="0.10"
+                  value={input.mealAllowancePerDay || ''}
+                  onChange={(e) => update('mealAllowancePerDay', Math.max(0, Number(e.target.value)))}
+                  placeholder="7.63"
+                />
+                <span className="input-suffix">€</span>
+              </div>
+              <div className="input-wrapper select-wrapper">
+                <select
+                  id="mealType"
+                  value={input.mealAllowanceType}
+                  onChange={(e) => update('mealAllowanceType', e.target.value as 'cash' | 'card')}
+                >
+                  <option value="card">Cartão</option>
+                  <option value="cash">Dinheiro</option>
+                </select>
+              </div>
             </div>
-            <span className="form-hint">Isento até {CONSTANTS.MEAL_ALLOWANCE_EXEMPT_CASH.toFixed(2)}€/dia em cartão</span>
+            <span className="form-hint">
+              Isento até {input.mealAllowanceType === 'card'
+                ? `${CONSTANTS.MEAL_ALLOWANCE_EXEMPT_CARD.toFixed(2)}€/dia em cartão`
+                : `${CONSTANTS.MEAL_ALLOWANCE_EXEMPT_CASH.toFixed(2)}€/dia em dinheiro`}
+            </span>
           </div>
 
           {/* IRS Jovem */}
