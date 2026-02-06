@@ -17,10 +17,13 @@ const defaultInput: SalaryInput = {
   numberOfMonths: 14,
   irsJovem: false,
   irsJovemYear: 1,
+  otherTaxableIncome: 0,
   activityType: 'services',
   vatRegime: 'exempt_art53',
   fiscalRegime: 'simplified',
   monthlyExpenses: 0,
+  selfEmployedFirstYear: false,
+  selfEmployedExemptRetention: false,
 };
 
 function App() {
