@@ -11,7 +11,6 @@ const defaultInput: SalaryInput = {
   grossMonthly: 1500,
   dependents: 0,
   maritalStatus: 'single',
-  hasDisability: false,
   region: 'continente',
   mealAllowancePerDay: 7.63,
   mealAllowanceType: 'card',
@@ -31,7 +30,10 @@ function App() {
   const [input, setInput] = useState<SalaryInput>(defaultInput);
   const taxTables = useTaxTables();
 
-  const result = useMemo(() => calculateSalary(input), [input]);
+  const result = useMemo(
+    () => calculateSalary(input, taxTables.tables ?? undefined),
+    [input, taxTables.tables],
+  );
 
   const versionLabel = taxTables.version
     ? `Tabelas IRS ${taxTables.tables?.year ?? 2026} · v${taxTables.version}`
@@ -40,13 +42,14 @@ function App() {
 
   return (
     <div className="app">
-      <div className="bg-blob blob-1" />
-      <div className="bg-blob blob-2" />
-      <div className="bg-blob blob-3" />
+      <a href="#main-content" className="skip-link">Ir para o conteúdo principal</a>
+      <div className="bg-blob blob-1" aria-hidden="true" />
+      <div className="bg-blob blob-2" aria-hidden="true" />
+      <div className="bg-blob blob-3" aria-hidden="true" />
 
       <header className="app-header">
         <div className="logo">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect width="32" height="32" rx="8" fill="url(#logoGrad)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="700" fontFamily="system-ui">
               S
@@ -63,7 +66,7 @@ function App() {
         <p className="subtitle">Calculadora de Salário Líquido &middot; Portugal 2026</p>
       </header>
 
-      <main className="app-main">
+      <main id="main-content" className="app-main">
         <InputForm input={input} onChange={setInput} />
         <ResultsPanel result={result} input={input} />
       </main>

@@ -150,19 +150,6 @@ export default function InputForm({ input, onChange }: InputFormProps) {
         <SelfEmployedFields input={input} update={update} isCompare={isCompare} />
       )}
 
-      {isCompare && (
-        <div className="form-group checkbox-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={input.hasDisability}
-              onChange={(e) => update('hasDisability', e.target.checked)}
-            />
-            <span className="checkbox-custom" />
-            <span>Portador de deficiência</span>
-          </label>
-        </div>
-      )}
     </div>
   );
 }

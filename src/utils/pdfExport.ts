@@ -1,7 +1,7 @@
 // PDF Report Generator — professional salary breakdown export
-// Uses jsPDF for client-side vector PDF generation
+// Uses jsPDF for client-side vector PDF generation (lazy-loaded)
 
-import { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 import type { SalaryInput, SalaryResult, EmployedResult, SelfEmployedResult, ComparisonResult } from './types';
 import { formatCurrency, formatPercent } from './formatters';
 
@@ -36,8 +36,9 @@ class PdfBuilder {
   private readonly margin = 20;
   private readonly contentW: number;
 
-  constructor() {
-    this.doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(JsPDF: new (opts: any) => jsPDF) {
+    this.doc = new JsPDF({ unit: 'mm', format: 'a4' });
     this.pageW = this.doc.internal.pageSize.getWidth();
     this.contentW = this.pageW - this.margin * 2;
     this.y = this.margin;
@@ -345,8 +346,9 @@ function addComparisonResult(pdf: PdfBuilder, r: ComparisonResult, input: Salary
 
 // ---- Main export function ----
 
-export function exportPdf(input: SalaryInput, result: SalaryResult): void {
-  const pdf = new PdfBuilder();
+export async function exportPdf(input: SalaryInput, result: SalaryResult): Promise<void> {
+  const { jsPDF: JsPDF } = await import('jspdf');
+  const pdf = new PdfBuilder(JsPDF);
 
   const typeLabel = result.type === 'comparison' ? 'Comparação' :
     result.type === 'employed' ? 'Conta de Outrem' : 'Trabalhador Independente';

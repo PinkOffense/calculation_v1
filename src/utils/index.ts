@@ -11,6 +11,5 @@ export type {
 export { calculateSalary } from './calculator';
 export { formatCurrency, formatPercent } from './formatters';
 export { CONSTANTS } from './constants';
-export { exportPdf } from './pdfExport';
 export { fetchTaxTables, getCachedTables, getCachedVersion } from './taxTables';
 export type { TaxTables, TaxTablesJson } from './taxTables';

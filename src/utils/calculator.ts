@@ -1,10 +1,12 @@
 // Salary calculation engine
 // Employed, Self-Employed, and Comparison modes
+// Accepts optional TaxTables for dynamic configuration, falls back to hardcoded constants
 
 import type {
-  SalaryInput, MaritalStatus, Region,
+  SalaryInput, MaritalStatus, Region, TaxBracket,
   EmployedResult, SelfEmployedResult, ComparisonResult, SalaryResult,
 } from './types';
+import type { TaxTables } from './taxTables';
 import {
   SS_EMPLOYEE_RATE, SS_EMPLOYER_RATE,
   SS_SELF_EMPLOYED_RATE, SS_SELF_EMPLOYED_BASE_SERVICES, SS_SELF_EMPLOYED_BASE_SALES,
@@ -16,6 +18,75 @@ import {
   getBrackets, getDependentDeduction,
 } from './constants';
 
+// ---- Internal config resolved from TaxTables or hardcoded defaults ----
+
+interface CalcConfig {
+  ssEmployeeRate: number;
+  ssEmployerRate: number;
+  ssSelfEmployedRate: number;
+  ssSelfEmployedBaseServices: number;
+  ssSelfEmployedBaseSales: number;
+  mealExemptCash: number;
+  mealExemptCard: number;
+  workingDaysPerMonth: number;
+  workingMonthsForMeal: number;
+  vatStandardRate: number;
+  irsRetentionServices: number;
+  irsRetentionSales: number;
+  coefficientServices: number;
+  coefficientSales: number;
+  irsJovemExemption: Record<number, number>;
+  regionalMultiplier: Record<Region, number>;
+  getBrackets: (ms: MaritalStatus) => TaxBracket[];
+  getDependentDeduction: (ms: MaritalStatus) => number;
+}
+
+function resolveConfig(tables?: TaxTables): CalcConfig {
+  if (tables) {
+    return {
+      ssEmployeeRate: tables.ss.employeeRate,
+      ssEmployerRate: tables.ss.employerRate,
+      ssSelfEmployedRate: tables.ss.selfEmployedRate,
+      ssSelfEmployedBaseServices: tables.ss.selfEmployedBaseServices,
+      ssSelfEmployedBaseSales: tables.ss.selfEmployedBaseSales,
+      mealExemptCash: tables.meal.exemptCash,
+      mealExemptCard: tables.meal.exemptCard,
+      workingDaysPerMonth: tables.meal.workingDaysPerMonth,
+      workingMonthsForMeal: tables.meal.workingMonthsForMeal,
+      vatStandardRate: tables.vat.standardRate,
+      irsRetentionServices: tables.irsRetention.services,
+      irsRetentionSales: tables.irsRetention.sales,
+      coefficientServices: tables.coefficients.services,
+      coefficientSales: tables.coefficients.sales,
+      irsJovemExemption: tables.irsJovemExemption,
+      regionalMultiplier: tables.regionalMultipliers,
+      getBrackets: (ms) => tables.brackets[ms],
+      getDependentDeduction: (ms) => tables.dependentDeductions[ms],
+    };
+  }
+
+  return {
+    ssEmployeeRate: SS_EMPLOYEE_RATE,
+    ssEmployerRate: SS_EMPLOYER_RATE,
+    ssSelfEmployedRate: SS_SELF_EMPLOYED_RATE,
+    ssSelfEmployedBaseServices: SS_SELF_EMPLOYED_BASE_SERVICES,
+    ssSelfEmployedBaseSales: SS_SELF_EMPLOYED_BASE_SALES,
+    mealExemptCash: MEAL_ALLOWANCE_EXEMPT_CASH,
+    mealExemptCard: MEAL_ALLOWANCE_EXEMPT_CARD,
+    workingDaysPerMonth: WORKING_DAYS_PER_MONTH,
+    workingMonthsForMeal: WORKING_MONTHS_FOR_MEAL,
+    vatStandardRate: VAT_STANDARD_RATE,
+    irsRetentionServices: IRS_RETENTION_SERVICES,
+    irsRetentionSales: IRS_RETENTION_SALES,
+    coefficientServices: COEFFICIENT_SERVICES,
+    coefficientSales: COEFFICIENT_SALES,
+    irsJovemExemption: IRS_JOVEM_EXEMPTION,
+    regionalMultiplier: REGIONAL_IRS_MULTIPLIER,
+    getBrackets,
+    getDependentDeduction,
+  };
+}
+
 // ---- Helpers ----
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
@@ -25,23 +96,24 @@ function calculateIrsWithholding(
   maritalStatus: MaritalStatus,
   dependents: number,
   region: Region,
+  cfg: CalcConfig,
 ): number {
-  const brackets = getBrackets(maritalStatus);
-  const depDeduction = getDependentDeduction(maritalStatus);
+  const brackets = cfg.getBrackets(maritalStatus);
+  const depDeduction = cfg.getDependentDeduction(maritalStatus);
 
   const bracket = brackets.find(b => grossMonthly <= b.upTo);
   if (!bracket || bracket.rate === 0) return 0;
 
   let withholding = grossMonthly * bracket.rate - bracket.deduction;
   withholding -= dependents * depDeduction;
-  withholding *= REGIONAL_IRS_MULTIPLIER[region];
+  withholding *= cfg.regionalMultiplier[region];
 
   return Math.max(0, round2(withholding));
 }
 
 // ---- Employed ----
 
-function calculateEmployed(input: SalaryInput): EmployedResult {
+function calculateEmployed(input: SalaryInput, cfg: CalcConfig): EmployedResult {
   const {
     grossMonthly, dependents, maritalStatus, mealAllowancePerDay,
     mealAllowanceType, numberOfMonths, region, irsJovem, irsJovemYear,
@@ -53,21 +125,21 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
 
   // Meal allowance: full amount received, excess above exempt limit is taxable
   const mealExemptLimit = mealAllowanceType === 'card'
-    ? MEAL_ALLOWANCE_EXEMPT_CARD : MEAL_ALLOWANCE_EXEMPT_CASH;
-  const mealAllowanceMonthly = round2(mealAllowancePerDay * WORKING_DAYS_PER_MONTH);
-  const mealExemptMonthly = round2(Math.min(mealAllowancePerDay, mealExemptLimit) * WORKING_DAYS_PER_MONTH);
-  const mealTaxableMonthly = round2(Math.max(0, mealAllowancePerDay - mealExemptLimit) * WORKING_DAYS_PER_MONTH);
+    ? cfg.mealExemptCard : cfg.mealExemptCash;
+  const mealAllowanceMonthly = round2(mealAllowancePerDay * cfg.workingDaysPerMonth);
+  const mealExemptMonthly = round2(Math.min(mealAllowancePerDay, mealExemptLimit) * cfg.workingDaysPerMonth);
+  const mealTaxableMonthly = round2(Math.max(0, mealAllowancePerDay - mealExemptLimit) * cfg.workingDaysPerMonth);
 
   // Taxable gross = salary + supplements + meal taxable excess
   const taxableGrossMonthly = round2(totalGrossMonthly + mealTaxableMonthly);
 
-  const ssEmployee = round2(taxableGrossMonthly * SS_EMPLOYEE_RATE);
-  let irsWithholding = calculateIrsWithholding(taxableGrossMonthly, maritalStatus, dependents, region);
+  const ssEmployee = round2(taxableGrossMonthly * cfg.ssEmployeeRate);
+  let irsWithholding = calculateIrsWithholding(taxableGrossMonthly, maritalStatus, dependents, region, cfg);
 
   // IRS Jovem discount
   let irsJovemDiscount = 0;
   if (irsJovem && irsJovemYear >= 1 && irsJovemYear <= 10) {
-    const exemption = IRS_JOVEM_EXEMPTION[irsJovemYear] ?? 0;
+    const exemption = cfg.irsJovemExemption[irsJovemYear] ?? 0;
     irsJovemDiscount = round2(irsWithholding * exemption);
     irsWithholding = round2(irsWithholding - irsJovemDiscount);
   }
@@ -77,9 +149,9 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
 
   // Annual
   const grossAnnual = round2(grossMonthly * numberOfMonths + otherTaxable * 12);
-  const mealAllowanceAnnual = round2(mealAllowanceMonthly * WORKING_MONTHS_FOR_MEAL);
-  const mealTaxableAnnual = round2(mealTaxableMonthly * WORKING_MONTHS_FOR_MEAL);
-  const mealExemptAnnual = round2(mealExemptMonthly * WORKING_MONTHS_FOR_MEAL);
+  const mealAllowanceAnnual = round2(mealAllowanceMonthly * cfg.workingMonthsForMeal);
+  const mealTaxableAnnual = round2(mealTaxableMonthly * cfg.workingMonthsForMeal);
+  const mealExemptAnnual = round2(mealExemptMonthly * cfg.workingMonthsForMeal);
   const taxableGrossAnnual = round2(grossAnnual + mealTaxableAnnual);
   const ssAnnualEmployee = round2(ssEmployee * numberOfMonths);
   const irsAnnual = round2(irsWithholding * numberOfMonths);
@@ -87,7 +159,7 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   const totalNetAnnual = round2(netAnnual + mealExemptAnnual);
 
   // Employer costs
-  const ssEmployer = round2(taxableGrossMonthly * SS_EMPLOYER_RATE);
+  const ssEmployer = round2(taxableGrossMonthly * cfg.ssEmployerRate);
   const ssEmployerAnnual = round2(ssEmployer * numberOfMonths);
   const totalEmployerCostAnnual = round2(grossAnnual + mealTaxableAnnual + ssEmployerAnnual);
 
@@ -104,13 +176,13 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
     mealAllowanceAnnual, mealTaxableAnnual, totalNetAnnual,
     ssEmployer, ssEmployerAnnual, totalEmployerCostAnnual,
     effectiveIrsRate, effectiveTotalRate,
-    ssRate: SS_EMPLOYEE_RATE, irsRate,
+    ssRate: cfg.ssEmployeeRate, irsRate,
   };
 }
 
 // ---- Self-Employed ----
 
-function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
+function calculateSelfEmployed(input: SalaryInput, cfg: CalcConfig): SelfEmployedResult {
   const {
     grossMonthly, activityType, vatRegime, fiscalRegime,
     monthlyExpenses, region, dependents, maritalStatus,
@@ -119,20 +191,20 @@ function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
 
   const grossAnnual = round2(grossMonthly * 12);
 
-  let irsWithholdingRate = activityType === 'services' ? IRS_RETENTION_SERVICES : IRS_RETENTION_SALES;
+  let irsWithholdingRate = activityType === 'services' ? cfg.irsRetentionServices : cfg.irsRetentionSales;
   if (selfEmployedExemptRetention) irsWithholdingRate = 0;
   const irsWithholding = round2(grossMonthly * irsWithholdingRate);
 
   const ssIncomeBase = activityType === 'services'
-    ? SS_SELF_EMPLOYED_BASE_SERVICES : SS_SELF_EMPLOYED_BASE_SALES;
+    ? cfg.ssSelfEmployedBaseServices : cfg.ssSelfEmployedBaseSales;
   const ssBase = round2(grossMonthly * ssIncomeBase);
-  const ssRate = SS_SELF_EMPLOYED_RATE;
+  const ssRate = cfg.ssSelfEmployedRate;
   const ssContribution = selfEmployedFirstYear ? 0 : round2(ssBase * ssRate);
   const ssAnnual = round2(ssContribution * 12);
 
   let vatRate = 0, vatCollected = 0, vatAnnual = 0;
   if (vatRegime === 'normal') {
-    vatRate = VAT_STANDARD_RATE;
+    vatRate = cfg.vatStandardRate;
     vatCollected = round2(grossMonthly * vatRate);
     vatAnnual = round2(vatCollected * 12);
   }
@@ -142,19 +214,19 @@ function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
   const annualExpenses = round2(monthlyExpenses * 12);
 
   if (fiscalRegime === 'simplified') {
-    coefficient = activityType === 'services' ? COEFFICIENT_SERVICES : COEFFICIENT_SALES;
+    coefficient = activityType === 'services' ? cfg.coefficientServices : cfg.coefficientSales;
     taxableIncome = round2(grossAnnual * coefficient);
   } else {
     coefficient = 1;
     taxableIncome = round2(Math.max(0, grossAnnual - annualExpenses));
   }
 
-  const regionalIrs = round2(irsWithholding * REGIONAL_IRS_MULTIPLIER[region]);
+  const regionalIrs = round2(irsWithholding * cfg.regionalMultiplier[region]);
   const regionalIrsAnnual = round2(regionalIrs * 12);
   const regionalNetMonthly = round2(grossMonthly - regionalIrs - ssContribution);
   const regionalNetAnnual = round2(grossAnnual - regionalIrsAnnual - ssAnnual);
 
-  const equivalentGrossEmployed = findEquivalentEmployedGross(regionalNetAnnual, dependents, maritalStatus, region);
+  const equivalentGrossEmployed = findEquivalentEmployedGross(regionalNetAnnual, dependents, maritalStatus, region, cfg);
 
   return {
     type: 'self_employed',
@@ -175,13 +247,14 @@ function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
 function findEquivalentEmployedGross(
   targetNetAnnual: number, dependents: number,
   maritalStatus: MaritalStatus, region: Region,
+  cfg: CalcConfig,
 ): number {
   let low = 0, high = targetNetAnnual * 2.5;
 
   for (let i = 0; i < 50; i++) {
     const mid = (low + high) / 2;
-    const ss = mid * SS_EMPLOYEE_RATE;
-    const irs = calculateIrsWithholding(mid, maritalStatus, dependents, region);
+    const ss = mid * cfg.ssEmployeeRate;
+    const irs = calculateIrsWithholding(mid, maritalStatus, dependents, region, cfg);
     const annualNet = (mid - ss - irs) * 14;
 
     if (annualNet < targetNetAnnual) low = mid;
@@ -193,9 +266,9 @@ function findEquivalentEmployedGross(
 
 // ---- Comparison ----
 
-function calculateComparison(input: SalaryInput): ComparisonResult {
-  const employed = calculateEmployed({ ...input, employmentType: 'employed' });
-  const selfEmployed = calculateSelfEmployed({ ...input, employmentType: 'self_employed' });
+function calculateComparison(input: SalaryInput, cfg: CalcConfig): ComparisonResult {
+  const employed = calculateEmployed({ ...input, employmentType: 'employed' }, cfg);
+  const selfEmployed = calculateSelfEmployed({ ...input, employmentType: 'self_employed' }, cfg);
 
   const monthlyDiff = employed.totalNetMonthly - selfEmployed.totalNetMonthly;
   const annualDiff = employed.totalNetAnnual - selfEmployed.totalNetAnnual;
@@ -214,8 +287,9 @@ function calculateComparison(input: SalaryInput): ComparisonResult {
 
 // ---- Main entry point ----
 
-export function calculateSalary(input: SalaryInput): SalaryResult {
-  if (input.employmentType === 'compare') return calculateComparison(input);
-  if (input.employmentType === 'self_employed') return calculateSelfEmployed(input);
-  return calculateEmployed(input);
+export function calculateSalary(input: SalaryInput, tables?: TaxTables): SalaryResult {
+  const cfg = resolveConfig(tables);
+  if (input.employmentType === 'compare') return calculateComparison(input, cfg);
+  if (input.employmentType === 'self_employed') return calculateSelfEmployed(input, cfg);
+  return calculateEmployed(input, cfg);
 }
