@@ -46,7 +46,7 @@ export interface TaxTablesJson {
   irsBrackets: {
     single: Array<{ upTo: number | null; rate: number; deduction: number }>;
     marriedSingleHolder: Array<{ upTo: number | null; rate: number; deduction: number }>;
-    marriedTwoHolders: string | Array<{ upTo: number | null; rate: number; deduction: number }>;
+    marriedTwoHolders: 'single' | Array<{ upTo: number | null; rate: number; deduction: number }>;
   };
 }
 
