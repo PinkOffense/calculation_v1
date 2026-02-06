@@ -49,7 +49,7 @@ function App() {
           </svg>
           <h1>Salário PT</h1>
         </div>
-        <p className="subtitle">Calculadora de Salário Líquido &middot; Portugal 2025</p>
+        <p className="subtitle">Calculadora de Salário Líquido &middot; Portugal 2026</p>
       </header>
 
       <main className="app-main">
@@ -59,7 +59,7 @@ function App() {
 
       <footer className="app-footer">
         <p>
-          Valores indicativos baseados nas tabelas de retenção IRS 2025.
+          Valores indicativos baseados nas tabelas de retenção IRS 2026 (Despacho n.º 233-A/2026).
           Inclui regras para Continente, Açores e Madeira.
           <br />
           Consulte sempre um contabilista para situações específicas.

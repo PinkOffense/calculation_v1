@@ -13,11 +13,15 @@ export default function InputForm({ input, onChange }: InputFormProps) {
 
   const isEmployed = input.employmentType === 'employed';
   const isSelfEmployed = input.employmentType === 'self_employed';
+  const isCompare = input.employmentType === 'compare';
+
+  const showEmployedFields = isEmployed || isCompare;
+  const showSelfEmployedFields = isSelfEmployed || isCompare;
 
   return (
     <div className="input-form">
       {/* Employment Type Toggle */}
-      <div className="employment-toggle">
+      <div className="employment-toggle triple">
         <button
           className={isEmployed ? 'active' : ''}
           onClick={() => update('employmentType', 'employed' as EmploymentType)}
@@ -26,7 +30,8 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
           </svg>
-          Conta de Outrem
+          <span className="toggle-label-full">Conta de Outrem</span>
+          <span className="toggle-label-short">Outrem</span>
         </button>
         <button
           className={isSelfEmployed ? 'active' : ''}
@@ -38,7 +43,20 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
-          Independente
+          <span className="toggle-label-full">Independente</span>
+          <span className="toggle-label-short">Indep.</span>
+        </button>
+        <button
+          className={isCompare ? 'active compare' : ''}
+          onClick={() => update('employmentType', 'compare' as EmploymentType)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          <span className="toggle-label-full">Comparar</span>
+          <span className="toggle-label-short">Comp.</span>
         </button>
       </div>
 
@@ -49,13 +67,13 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
         </div>
-        <h2>{isEmployed ? 'Dados Salariais' : 'Dados de Faturação'}</h2>
+        <h2>{isCompare ? 'Comparação' : isEmployed ? 'Dados Salariais' : 'Dados de Faturação'}</h2>
       </div>
 
       {/* Gross Monthly */}
       <div className="form-group">
         <label htmlFor="grossMonthly">
-          {isEmployed ? 'Salário Bruto Mensal' : 'Faturação Mensal'}
+          {isCompare ? 'Valor Bruto Mensal' : isEmployed ? 'Salário Bruto Mensal' : 'Faturação Mensal'}
         </label>
         <div className="input-wrapper currency-input">
           <input
@@ -69,6 +87,9 @@ export default function InputForm({ input, onChange }: InputFormProps) {
           />
           <span className="input-suffix">€</span>
         </div>
+        {isCompare && (
+          <span className="form-hint">O mesmo valor bruto será usado para ambos os cenários</span>
+        )}
       </div>
 
       {/* Region */}
@@ -119,7 +140,7 @@ export default function InputForm({ input, onChange }: InputFormProps) {
           </div>
         </div>
 
-        {isEmployed && (
+        {showEmployedFields && (
           <div className="form-group">
             <label htmlFor="numberOfMonths">Meses de Salário</label>
             <div className="input-wrapper select-wrapper">
@@ -137,8 +158,10 @@ export default function InputForm({ input, onChange }: InputFormProps) {
       </div>
 
       {/* ---- EMPLOYED-SPECIFIC FIELDS ---- */}
-      {isEmployed && (
+      {showEmployedFields && (
         <>
+          {isCompare && <div className="form-section-title">Conta de Outrem</div>}
+
           <div className="form-group">
             <label htmlFor="mealAllowance">Subsídio de Alimentação / dia</label>
             <div className="input-wrapper currency-input">
@@ -189,24 +212,26 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             </div>
           )}
 
-          <div className="form-group checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={input.hasDisability}
-                onChange={(e) => update('hasDisability', e.target.checked)}
-              />
-              <span className="checkbox-custom" />
-              <span>Portador de deficiência</span>
-            </label>
-          </div>
+          {!isCompare && (
+            <div className="form-group checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={input.hasDisability}
+                  onChange={(e) => update('hasDisability', e.target.checked)}
+                />
+                <span className="checkbox-custom" />
+                <span>Portador de deficiência</span>
+              </label>
+            </div>
+          )}
         </>
       )}
 
       {/* ---- SELF-EMPLOYED SPECIFIC FIELDS ---- */}
-      {isSelfEmployed && (
+      {showSelfEmployedFields && (
         <>
-          <div className="form-section-title">Regime Fiscal</div>
+          <div className="form-section-title">{isCompare ? 'Independente' : 'Regime Fiscal'}</div>
 
           <div className="form-group">
             <label htmlFor="activityType">Tipo de Atividade</label>
@@ -285,6 +310,20 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             (efetivo ≈ {(CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_INCOME_BASE * 100).toFixed(1)}%)
           </div>
         </>
+      )}
+
+      {isCompare && (
+        <div className="form-group checkbox-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={input.hasDisability}
+              onChange={(e) => update('hasDisability', e.target.checked)}
+            />
+            <span className="checkbox-custom" />
+            <span>Portador de deficiência</span>
+          </label>
+        </div>
       )}
     </div>
   );

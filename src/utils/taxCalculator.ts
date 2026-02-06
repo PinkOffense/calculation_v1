@@ -1,12 +1,13 @@
-// Portuguese Salary Calculator - Tax Rules 2025
-// Supports: Conta de Outrem + Trabalhador Independente
+// Portuguese Salary Calculator - Tax Rules 2026
+// Despacho n.º 233-A/2026, 6 de janeiro
+// Supports: Conta de Outrem + Trabalhador Independente + Comparison mode
 // IRS withholding, Social Security, IVA, IRS Jovem, Regional tables
 
 // ============================================================
 // TYPES
 // ============================================================
 
-export type EmploymentType = 'employed' | 'self_employed';
+export type EmploymentType = 'employed' | 'self_employed' | 'compare';
 export type MaritalStatus = 'single' | 'married_single_holder' | 'married_two_holders';
 export type Region = 'continente' | 'acores' | 'madeira';
 export type ActivityType = 'services' | 'sales';
@@ -101,7 +102,18 @@ export interface SelfEmployedResult {
   effectiveTotalRate: number;
 }
 
-export type SalaryResult = EmployedResult | SelfEmployedResult;
+export interface ComparisonResult {
+  type: 'comparison';
+  employed: EmployedResult;
+  selfEmployed: SelfEmployedResult;
+  difference: {
+    monthlyNet: number;
+    annualNet: number;
+    betterOption: 'employed' | 'self_employed' | 'equal';
+  };
+}
+
+export type SalaryResult = EmployedResult | SelfEmployedResult | ComparisonResult;
 
 // ============================================================
 // CONSTANTS
@@ -115,12 +127,12 @@ const SS_EMPLOYER_RATE = 0.2375;
 const SS_SELF_EMPLOYED_RATE = 0.214; // 21.4%
 const SS_SELF_EMPLOYED_INCOME_BASE = 0.70; // Applied on 70% of income
 
-// Meal allowance
-const MEAL_ALLOWANCE_EXEMPT_CASH = 6.0;
+// Meal allowance (2026)
+const MEAL_ALLOWANCE_EXEMPT_CASH = 6.0; // €6.00/day cash exempt
 const WORKING_DAYS_PER_MONTH = 22;
 const WORKING_MONTHS_FOR_MEAL = 11;
 
-// IVA
+// IVA (2026)
 const VAT_STANDARD_RATE = 0.23;
 const VAT_EXEMPT_THRESHOLD = 14500; // Annual threshold for Art. 53
 
@@ -135,10 +147,10 @@ const COEFFICIENT_SALES = 0.15;
 // Specific deduction (employed)
 const SPECIFIC_DEDUCTION_ANNUAL = 4104;
 
-// Per-dependent monthly deduction
-const DEPENDENT_DEDUCTION = 21.43;
+// Per-dependent monthly deduction (2026 — parcela adicional por dependente)
+const DEPENDENT_DEDUCTION = 34.29;
 
-// IRS Jovem - exemption percentages per year (2025 rules)
+// IRS Jovem - exemption percentages per year (2026 rules)
 const IRS_JOVEM_EXEMPTION: Record<number, number> = {
   1: 1.0,   // 100% exempt 1st year
   2: 0.75,  // 75% exempt 2nd year
@@ -155,7 +167,10 @@ const REGIONAL_IRS_MULTIPLIER: Record<Region, number> = {
 };
 
 // ============================================================
-// IRS BRACKETS (Monthly, after SS deduction)
+// IRS BRACKETS 2026 (Despacho n.º 233-A/2026)
+// Monthly gross income → Taxa marginal máxima, Parcela a abater
+// Tabela I: Não casado / Casado dois titulares
+// Tabela III: Casado, único titular
 // ============================================================
 
 interface TaxBracket {
@@ -164,56 +179,42 @@ interface TaxBracket {
   deduction: number;
 }
 
+// Tabela I — Não casado sem dependentes / Casado dois titulares (2026)
+// Note: brackets at 1042 and 1108 use transition formulas in official tables;
+// we use the fixed parcela a abater for the standard calculation.
 const IRS_BRACKETS_SINGLE: TaxBracket[] = [
-  { upTo: 820, rate: 0, deduction: 0 },
-  { upTo: 935, rate: 0.1325, deduction: 108.59 },
-  { upTo: 1001, rate: 0.18, deduction: 153.08 },
-  { upTo: 1123, rate: 0.18, deduction: 153.08 },
-  { upTo: 1765, rate: 0.26, deduction: 242.88 },
-  { upTo: 2057, rate: 0.3275, deduction: 362.03 },
-  { upTo: 2382, rate: 0.37, deduction: 449.46 },
-  { upTo: 2786, rate: 0.3835, deduction: 481.62 },
-  { upTo: 3523, rate: 0.4005, deduction: 528.96 },
-  { upTo: 4400, rate: 0.41, deduction: 562.43 },
-  { upTo: 5654, rate: 0.4350, deduction: 672.43 },
-  { upTo: 6567, rate: 0.45, deduction: 757.24 },
-  { upTo: 20000, rate: 0.4700, deduction: 888.58 },
-  { upTo: Infinity, rate: 0.4800, deduction: 1088.58 },
+  { upTo: 920, rate: 0, deduction: 0 },
+  { upTo: 1042, rate: 0.125, deduction: 89.00 },
+  { upTo: 1108, rate: 0.157, deduction: 122.35 },
+  { upTo: 1154, rate: 0.157, deduction: 94.71 },
+  { upTo: 1212, rate: 0.212, deduction: 158.18 },
+  { upTo: 1819, rate: 0.241, deduction: 193.33 },
+  { upTo: 2119, rate: 0.311, deduction: 320.66 },
+  { upTo: 2499, rate: 0.349, deduction: 401.19 },
+  { upTo: 3305, rate: 0.3836, deduction: 487.66 },
+  { upTo: 5547, rate: 0.3969, deduction: 531.62 },
+  { upTo: 20221, rate: 0.4495, deduction: 823.40 },
+  { upTo: Infinity, rate: 0.4717, deduction: 1272.31 },
 ];
 
+// Tabela III — Casado, único titular (2026)
+// Threshold isento: até 991€
 const IRS_BRACKETS_MARRIED_SINGLE_HOLDER: TaxBracket[] = [
-  { upTo: 820, rate: 0, deduction: 0 },
-  { upTo: 935, rate: 0.1325, deduction: 108.59 },
-  { upTo: 1001, rate: 0.18, deduction: 153.08 },
-  { upTo: 1123, rate: 0.18, deduction: 175.08 },
-  { upTo: 1765, rate: 0.26, deduction: 264.88 },
-  { upTo: 2057, rate: 0.3275, deduction: 384.03 },
-  { upTo: 2382, rate: 0.37, deduction: 471.46 },
-  { upTo: 2786, rate: 0.3835, deduction: 503.62 },
-  { upTo: 3523, rate: 0.4005, deduction: 550.96 },
-  { upTo: 4400, rate: 0.41, deduction: 584.43 },
-  { upTo: 5654, rate: 0.4350, deduction: 694.43 },
-  { upTo: 6567, rate: 0.45, deduction: 779.24 },
-  { upTo: 20000, rate: 0.4700, deduction: 910.58 },
-  { upTo: Infinity, rate: 0.4800, deduction: 1110.58 },
+  { upTo: 991, rate: 0, deduction: 0 },
+  { upTo: 1108, rate: 0.125, deduction: 95.52 },
+  { upTo: 1212, rate: 0.157, deduction: 131.00 },
+  { upTo: 1301, rate: 0.157, deduction: 131.00 },
+  { upTo: 1819, rate: 0.212, deduction: 202.58 },
+  { upTo: 2119, rate: 0.241, deduction: 255.30 },
+  { upTo: 2499, rate: 0.311, deduction: 403.63 },
+  { upTo: 3305, rate: 0.349, deduction: 498.52 },
+  { upTo: 5547, rate: 0.3836, deduction: 612.86 },
+  { upTo: 20221, rate: 0.3969, deduction: 686.64 },
+  { upTo: Infinity, rate: 0.4717, deduction: 1199.87 },
 ];
 
-const IRS_BRACKETS_MARRIED_TWO_HOLDERS: TaxBracket[] = [
-  { upTo: 820, rate: 0, deduction: 0 },
-  { upTo: 935, rate: 0.1325, deduction: 108.59 },
-  { upTo: 1001, rate: 0.18, deduction: 153.08 },
-  { upTo: 1123, rate: 0.18, deduction: 153.08 },
-  { upTo: 1765, rate: 0.26, deduction: 242.88 },
-  { upTo: 2057, rate: 0.3275, deduction: 362.03 },
-  { upTo: 2382, rate: 0.37, deduction: 449.46 },
-  { upTo: 2786, rate: 0.3835, deduction: 481.62 },
-  { upTo: 3523, rate: 0.4005, deduction: 528.96 },
-  { upTo: 4400, rate: 0.41, deduction: 562.43 },
-  { upTo: 5654, rate: 0.4350, deduction: 672.43 },
-  { upTo: 6567, rate: 0.45, deduction: 757.24 },
-  { upTo: 20000, rate: 0.4700, deduction: 888.58 },
-  { upTo: Infinity, rate: 0.4800, deduction: 1088.58 },
-];
+// Tabela I is also used for Casado dois titulares (same as single)
+const IRS_BRACKETS_MARRIED_TWO_HOLDERS: TaxBracket[] = IRS_BRACKETS_SINGLE;
 
 // ============================================================
 // HELPERS
@@ -433,10 +434,36 @@ function findEquivalentEmployedGross(
 }
 
 // ============================================================
+// COMPARISON CALCULATION
+// ============================================================
+
+function calculateComparison(input: SalaryInput): ComparisonResult {
+  const employed = calculateEmployed({ ...input, employmentType: 'employed' });
+  const selfEmployed = calculateSelfEmployed({ ...input, employmentType: 'self_employed' });
+
+  const monthlyDiff = employed.totalNetMonthly - selfEmployed.totalNetMonthly;
+  const annualDiff = employed.totalNetAnnual - selfEmployed.totalNetAnnual;
+
+  return {
+    type: 'comparison',
+    employed,
+    selfEmployed,
+    difference: {
+      monthlyNet: monthlyDiff,
+      annualNet: annualDiff,
+      betterOption: annualDiff > 10 ? 'employed' : annualDiff < -10 ? 'self_employed' : 'equal',
+    },
+  };
+}
+
+// ============================================================
 // MAIN EXPORT
 // ============================================================
 
 export function calculateSalary(input: SalaryInput): SalaryResult {
+  if (input.employmentType === 'compare') {
+    return calculateComparison(input);
+  }
   if (input.employmentType === 'self_employed') {
     return calculateSelfEmployed(input);
   }
