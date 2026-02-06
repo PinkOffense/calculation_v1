@@ -48,7 +48,7 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             type="number"
             min="0"
             step="50"
-            value={input.grossMonthly || ''}
+            value={input.grossMonthly}
             onChange={(e) => update('grossMonthly', Math.max(0, Number(e.target.value)))}
             placeholder={isEmployed ? '1 500' : '3 000'}
           />
