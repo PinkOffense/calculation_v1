@@ -103,7 +103,7 @@ export default function InputForm({ input, onChange }: InputFormProps) {
           >
             <option value="continente">Portugal Continental</option>
             <option value="acores">Açores (-30% IRS)</option>
-            <option value="madeira">Madeira (-20% IRS)</option>
+            <option value="madeira">Madeira (-30% IRS)</option>
           </select>
         </div>
       </div>
@@ -216,13 +216,18 @@ export default function InputForm({ input, onChange }: InputFormProps) {
                 <select
                   id="irsJovemYear"
                   value={input.irsJovemYear}
-                  onChange={(e) => update('irsJovemYear', Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                  onChange={(e) => update('irsJovemYear', Number(e.target.value))}
                 >
                   <option value={1}>1.º ano — 100% isento</option>
                   <option value={2}>2.º ano — 75% isento</option>
-                  <option value={3}>3.º ano — 50% isento</option>
-                  <option value={4}>4.º ano — 50% isento</option>
-                  <option value={5}>5.º ano — 25% isento</option>
+                  <option value={3}>3.º ano — 75% isento</option>
+                  <option value={4}>4.º ano — 75% isento</option>
+                  <option value={5}>5.º ano — 50% isento</option>
+                  <option value={6}>6.º ano — 50% isento</option>
+                  <option value={7}>7.º ano — 50% isento</option>
+                  <option value={8}>8.º ano — 25% isento</option>
+                  <option value={9}>9.º ano — 25% isento</option>
+                  <option value={10}>10.º ano — 25% isento</option>
                 </select>
               </div>
             </div>
@@ -262,7 +267,7 @@ export default function InputForm({ input, onChange }: InputFormProps) {
               </select>
             </div>
             <span className="form-hint">
-              Retenção na fonte: {input.activityType === 'services' ? '25%' : '11,5%'}
+              Retenção na fonte: {input.activityType === 'services' ? '23%' : 'Sem retenção'}
             </span>
           </div>
 
@@ -322,8 +327,14 @@ export default function InputForm({ input, onChange }: InputFormProps) {
 
           {/* SS Info */}
           <div className="form-hint-box info">
-            SS: {(CONSTANTS.SS_SELF_EMPLOYED_RATE * 100).toFixed(1)}% sobre {(CONSTANTS.SS_SELF_EMPLOYED_INCOME_BASE * 100).toFixed(0)}% do rendimento
-            (efetivo ≈ {(CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_INCOME_BASE * 100).toFixed(1)}%)
+            SS: {(CONSTANTS.SS_SELF_EMPLOYED_RATE * 100).toFixed(1)}% sobre{' '}
+            {input.activityType === 'services'
+              ? `${(CONSTANTS.SS_SELF_EMPLOYED_BASE_SERVICES * 100).toFixed(0)}%`
+              : `${(CONSTANTS.SS_SELF_EMPLOYED_BASE_SALES * 100).toFixed(0)}%`}{' '}
+            do rendimento (efetivo ≈{' '}
+            {input.activityType === 'services'
+              ? (CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_BASE_SERVICES * 100).toFixed(1)
+              : (CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_BASE_SALES * 100).toFixed(1)}%)
           </div>
         </>
       )}

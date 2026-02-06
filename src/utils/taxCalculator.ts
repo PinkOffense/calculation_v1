@@ -2,6 +2,18 @@
 // Despacho n.º 233-A/2026, 6 de janeiro
 // Supports: Conta de Outrem + Trabalhador Independente + Comparison mode
 // IRS withholding, Social Security, IVA, IRS Jovem, Regional tables
+//
+// CORRECTIONS APPLIED (verified against official sources):
+// - IRS applied to GROSS salary (not gross-SS) per Despacho examples
+// - Tabela III: correct brackets from Despacho 233-A/2026
+// - Variable formulas for transition brackets (rows 2-3)
+// - Dependent deduction varies by table (21.43 / 34.29 / 42.86)
+// - IRS retention services: 25% → 23% (since OE 2025)
+// - Sales: no IRS withholding (Art. 101 CIRS)
+// - IVA Art. 53: €14,500 → €15,000 (since 2025)
+// - IRS Jovem: 10 years (Art. 12-B CIRS, OE 2025)
+// - Madeira: 30% reduction (DLR 8/2025/M)
+// - SS self-employed: 70% services, 20% sales
 
 // ============================================================
 // TYPES
@@ -27,7 +39,7 @@ export interface SalaryInput {
   mealAllowanceType: 'cash' | 'card';
   numberOfMonths: 14 | 12;
   irsJovem: boolean;
-  irsJovemYear: 1 | 2 | 3 | 4 | 5; // Year of benefit (1st-5th)
+  irsJovemYear: number; // 1-10
 
   // Trabalhador Independente specific
   activityType: ActivityType;
@@ -126,7 +138,8 @@ const SS_EMPLOYER_RATE = 0.2375;
 
 // Social Security - Self-employed
 const SS_SELF_EMPLOYED_RATE = 0.214; // 21.4%
-const SS_SELF_EMPLOYED_INCOME_BASE = 0.70; // Applied on 70% of income
+const SS_SELF_EMPLOYED_BASE_SERVICES = 0.70; // 70% for services
+const SS_SELF_EMPLOYED_BASE_SALES = 0.20;    // 20% for sales
 
 // Meal allowance (2026 — Acordo Plurianual Função Pública)
 const MEAL_ALLOWANCE_EXEMPT_CASH = 6.15;  // €6.15/day cash exempt
@@ -136,43 +149,60 @@ const WORKING_MONTHS_FOR_MEAL = 11;
 
 // IVA (2026)
 const VAT_STANDARD_RATE = 0.23;
-const VAT_EXEMPT_THRESHOLD = 14500; // Annual threshold for Art. 53
+const VAT_EXEMPT_THRESHOLD = 15000; // €15,000/year (updated from €14,500 since 2025)
 
-// IRS Withholding at source (self-employed)
-const IRS_RETENTION_SERVICES = 0.25; // 25%
-const IRS_RETENTION_SALES = 0.115; // 11.5% (not standard but for commercial/industrial)
+// IRS Withholding at source - Self-employed (Art. 101 CIRS)
+// Since OE 2025: services reduced from 25% to 23%
+const IRS_RETENTION_SERVICES = 0.23; // 23% — services listed in Art. 151 CIRS
+// Sales of goods: NO withholding at source (Art. 101 only covers services)
+const IRS_RETENTION_SALES = 0;
 
-// Simplified regime coefficients
+// Simplified regime coefficients (Art. 31 CIRS)
 const COEFFICIENT_SERVICES = 0.75;
 const COEFFICIENT_SALES = 0.15;
 
 // Specific deduction (employed)
 const SPECIFIC_DEDUCTION_ANNUAL = 4104;
 
-// Per-dependent monthly deduction (2026 — parcela adicional por dependente)
-const DEPENDENT_DEDUCTION = 34.29;
+// Per-dependent monthly deduction — varies by table (Despacho 233-A/2026)
+const DEPENDENT_DEDUCTION_SINGLE = 34.29;         // Tabela II (não casado c/ dependentes)
+const DEPENDENT_DEDUCTION_MARRIED_TWO = 21.43;    // Tabela I (casado dois titulares)
+const DEPENDENT_DEDUCTION_MARRIED_SINGLE = 42.86;  // Tabela III (casado único titular)
 
-// IRS Jovem - exemption percentages per year (2026 rules)
+function getDependentDeduction(maritalStatus: MaritalStatus): number {
+  switch (maritalStatus) {
+    case 'single': return DEPENDENT_DEDUCTION_SINGLE;
+    case 'married_two_holders': return DEPENDENT_DEDUCTION_MARRIED_TWO;
+    case 'married_single_holder': return DEPENDENT_DEDUCTION_MARRIED_SINGLE;
+  }
+}
+
+// IRS Jovem - exemption percentages per year (2026 rules — Art. 12-B CIRS)
+// OE 2025 extended to 10 years, age limit 35
 const IRS_JOVEM_EXEMPTION: Record<number, number> = {
-  1: 1.0,   // 100% exempt 1st year
-  2: 0.75,  // 75% exempt 2nd year
-  3: 0.50,  // 50% exempt 3rd year
-  4: 0.50,  // 50% exempt 4th year
-  5: 0.25,  // 25% exempt 5th year
+  1: 1.0,    // 100% exempt 1st year
+  2: 0.75,   // 75% exempt 2nd-4th year
+  3: 0.75,
+  4: 0.75,
+  5: 0.50,   // 50% exempt 5th-7th year
+  6: 0.50,
+  7: 0.50,
+  8: 0.25,   // 25% exempt 8th-10th year
+  9: 0.25,
+  10: 0.25,
 };
 
 // Regional multipliers for IRS (Azores/Madeira have reduced rates)
 const REGIONAL_IRS_MULTIPLIER: Record<Region, number> = {
   continente: 1.0,
-  acores: 0.70,   // 30% reduction
-  madeira: 0.80,   // 20% reduction
+  acores: 0.70,   // 30% reduction (DLR 15-A/2021/A)
+  madeira: 0.70,   // 30% reduction for 2026 (DLR 8/2025/M — all brackets)
 };
 
 // ============================================================
 // IRS BRACKETS 2026 (Despacho n.º 233-A/2026)
-// Monthly gross income → Taxa marginal máxima, Parcela a abater
-// Tabela I: Não casado / Casado dois titulares
-// Tabela III: Casado, único titular
+// IMPORTANT: Tables are applied to GROSS monthly salary (not gross-SS)
+// Rows 2-3 use variable formulas (pre-computed as effective rate/deduction)
 // ============================================================
 
 interface TaxBracket {
@@ -181,41 +211,48 @@ interface TaxBracket {
   deduction: number;
 }
 
-// Tabela I — Não casado sem dependentes / Casado dois titulares (2026)
-// Note: brackets at 1042 and 1108 use transition formulas in official tables;
-// we use the fixed parcela a abater for the standard calculation.
+// Tabela I/II — Não casado / Casado dois titulares (2026)
+// Rows 2-3: variable formula pre-computed
+// Row 2 original: 12.50% with deduction = 12.50% × 2.60 × (1273.85 - R)
+//   effective: R × 0.45 - 414.00
+// Row 3 original: 15.70% with deduction = 15.70% × 1.35 × (1554.83 - R)
+//   effective: R × 0.36895 - 329.47
 const IRS_BRACKETS_SINGLE: TaxBracket[] = [
-  { upTo: 920, rate: 0, deduction: 0 },
-  { upTo: 1042, rate: 0.125, deduction: 89.00 },
-  { upTo: 1108, rate: 0.157, deduction: 122.35 },
-  { upTo: 1154, rate: 0.157, deduction: 94.71 },
-  { upTo: 1212, rate: 0.212, deduction: 158.18 },
-  { upTo: 1819, rate: 0.241, deduction: 193.33 },
-  { upTo: 2119, rate: 0.311, deduction: 320.66 },
-  { upTo: 2499, rate: 0.349, deduction: 401.19 },
-  { upTo: 3305, rate: 0.3836, deduction: 487.66 },
-  { upTo: 5547, rate: 0.3969, deduction: 531.62 },
-  { upTo: 20221, rate: 0.4495, deduction: 823.40 },
+  { upTo: 920,    rate: 0,       deduction: 0 },
+  { upTo: 1042,   rate: 0.45,    deduction: 414.00 },    // Variable formula
+  { upTo: 1108,   rate: 0.36895, deduction: 329.47 },    // Variable formula
+  { upTo: 1154,   rate: 0.157,   deduction: 94.71 },
+  { upTo: 1212,   rate: 0.212,   deduction: 158.18 },
+  { upTo: 1819,   rate: 0.241,   deduction: 193.33 },
+  { upTo: 2119,   rate: 0.311,   deduction: 320.66 },
+  { upTo: 2499,   rate: 0.349,   deduction: 401.19 },
+  { upTo: 3305,   rate: 0.3836,  deduction: 487.66 },
+  { upTo: 5547,   rate: 0.3969,  deduction: 531.62 },
+  { upTo: 20221,  rate: 0.4495,  deduction: 823.40 },
   { upTo: Infinity, rate: 0.4717, deduction: 1272.31 },
 ];
 
 // Tabela III — Casado, único titular (2026)
-// Threshold isento: até 991€
+// Row 2 original: 12.50% with deduction = 12.50% × 2.60 × (1372.15 - R)
+//   effective: R × 0.45 - 445.95
+// Row 3 original: 12.50% with deduction = 12.50% × 1.35 × (1677.85 - R)
+//   effective: R × 0.29375 - 283.13
 const IRS_BRACKETS_MARRIED_SINGLE_HOLDER: TaxBracket[] = [
-  { upTo: 991, rate: 0, deduction: 0 },
-  { upTo: 1108, rate: 0.125, deduction: 95.52 },
-  { upTo: 1212, rate: 0.157, deduction: 131.00 },
-  { upTo: 1301, rate: 0.157, deduction: 131.00 },
-  { upTo: 1819, rate: 0.212, deduction: 202.58 },
-  { upTo: 2119, rate: 0.241, deduction: 255.30 },
-  { upTo: 2499, rate: 0.311, deduction: 403.63 },
-  { upTo: 3305, rate: 0.349, deduction: 498.52 },
-  { upTo: 5547, rate: 0.3836, deduction: 612.86 },
-  { upTo: 20221, rate: 0.3969, deduction: 686.64 },
-  { upTo: Infinity, rate: 0.4717, deduction: 1199.87 },
+  { upTo: 991,     rate: 0,        deduction: 0 },
+  { upTo: 1042,    rate: 0.45,     deduction: 445.95 },    // Variable formula
+  { upTo: 1108,    rate: 0.29375,  deduction: 283.13 },    // Variable formula
+  { upTo: 1119,    rate: 0.125,    deduction: 96.17 },
+  { upTo: 1432,    rate: 0.1272,   deduction: 98.64 },
+  { upTo: 1962,    rate: 0.157,    deduction: 141.32 },
+  { upTo: 2240,    rate: 0.1938,   deduction: 213.53 },
+  { upTo: 2773,    rate: 0.2277,   deduction: 289.47 },
+  { upTo: 3389,    rate: 0.257,    deduction: 370.72 },
+  { upTo: 5965,    rate: 0.2881,   deduction: 476.12 },
+  { upTo: 20265,   rate: 0.3843,   deduction: 1049.96 },
+  { upTo: Infinity, rate: 0.4717,  deduction: 2821.13 },
 ];
 
-// Tabela I is also used for Casado dois titulares (same as single)
+// Tabela I is also used for Casado dois titulares (same brackets)
 const IRS_BRACKETS_MARRIED_TWO_HOLDERS: TaxBracket[] = IRS_BRACKETS_SINGLE;
 
 // ============================================================
@@ -232,17 +269,21 @@ function getBrackets(maritalStatus: MaritalStatus): TaxBracket[] {
   }
 }
 
+// IRS withholding: applied to GROSS monthly salary (not gross-SS)
+// Formula: R × rate - deduction - (dependentDeduction × dependents)
+// Then multiplied by regional factor
 function calculateIrsWithholding(
-  taxableMonthly: number,
+  grossMonthly: number,
   maritalStatus: MaritalStatus,
   dependents: number,
   region: Region,
 ): number {
   const brackets = getBrackets(maritalStatus);
+  const depDeduction = getDependentDeduction(maritalStatus);
 
   let bracket: TaxBracket | undefined;
   for (const b of brackets) {
-    if (taxableMonthly <= b.upTo) {
+    if (grossMonthly <= b.upTo) {
       bracket = b;
       break;
     }
@@ -250,8 +291,8 @@ function calculateIrsWithholding(
 
   if (!bracket || bracket.rate === 0) return 0;
 
-  let withholding = taxableMonthly * bracket.rate - bracket.deduction;
-  withholding -= dependents * DEPENDENT_DEDUCTION;
+  let withholding = grossMonthly * bracket.rate - bracket.deduction;
+  withholding -= dependents * depDeduction;
 
   // Apply regional multiplier
   withholding *= REGIONAL_IRS_MULTIPLIER[region];
@@ -272,16 +313,13 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   // Social Security (employee)
   const ssEmployee = round2(grossMonthly * SS_EMPLOYEE_RATE);
 
-  // Taxable income for IRS (after SS)
-  const taxableMonthly = grossMonthly - ssEmployee;
-
-  // IRS withholding
-  let irsWithholding = calculateIrsWithholding(taxableMonthly, maritalStatus, dependents, region);
+  // IRS withholding — applied to GROSS salary (tables already account for SS)
+  let irsWithholding = calculateIrsWithholding(grossMonthly, maritalStatus, dependents, region);
 
   // IRS Jovem discount
   let irsJovemDiscount = 0;
-  if (irsJovem && irsJovemYear >= 1 && irsJovemYear <= 5) {
-    const exemption = IRS_JOVEM_EXEMPTION[irsJovemYear];
+  if (irsJovem && irsJovemYear >= 1 && irsJovemYear <= 10) {
+    const exemption = IRS_JOVEM_EXEMPTION[irsJovemYear] ?? 0;
     irsJovemDiscount = round2(irsWithholding * exemption);
     irsWithholding = round2(irsWithholding - irsJovemDiscount);
   }
@@ -340,15 +378,19 @@ function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
 
   const grossAnnual = round2(grossMonthly * 12);
 
-  // IRS Withholding at source
+  // IRS Withholding at source (Art. 101 CIRS)
+  // Services: 23%, Sales: 0% (no withholding)
   const irsWithholdingRate = activityType === 'services'
     ? IRS_RETENTION_SERVICES
     : IRS_RETENTION_SALES;
   const irsWithholding = round2(grossMonthly * irsWithholdingRate);
 
   // Social Security (self-employed)
-  // Based on 70% of income, with 21.4% rate, assessed quarterly
-  const ssBase = round2(grossMonthly * SS_SELF_EMPLOYED_INCOME_BASE);
+  // Base: 70% for services, 20% for sales/production
+  const ssIncomeBase = activityType === 'services'
+    ? SS_SELF_EMPLOYED_BASE_SERVICES
+    : SS_SELF_EMPLOYED_BASE_SALES;
+  const ssBase = round2(grossMonthly * ssIncomeBase);
   const ssRate = SS_SELF_EMPLOYED_RATE;
   const ssContribution = round2(ssBase * ssRate);
   const ssAnnual = round2(ssContribution * 12);
@@ -363,7 +405,6 @@ function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
     vatCollected = round2(grossMonthly * vatRate);
     vatAnnual = round2(vatCollected * 12);
   }
-  // Art. 53 exempt if annual < €14,500
 
   // Taxable income calculation
   let coefficient: number;
@@ -423,8 +464,8 @@ function findEquivalentEmployedGross(
   for (let i = 0; i < 50; i++) {
     const mid = (low + high) / 2;
     const ss = mid * SS_EMPLOYEE_RATE;
-    const taxable = mid - ss;
-    const irs = calculateIrsWithholding(taxable, maritalStatus, dependents, region);
+    // IRS is applied to gross (not gross-SS)
+    const irs = calculateIrsWithholding(mid, maritalStatus, dependents, region);
     const net = mid - ss - irs;
     const annualNet = net * 14; // Standard 14 months
 
@@ -496,7 +537,8 @@ export const CONSTANTS = {
   SS_EMPLOYEE_RATE,
   SS_EMPLOYER_RATE,
   SS_SELF_EMPLOYED_RATE,
-  SS_SELF_EMPLOYED_INCOME_BASE,
+  SS_SELF_EMPLOYED_BASE_SERVICES,
+  SS_SELF_EMPLOYED_BASE_SALES,
   VAT_STANDARD_RATE,
   VAT_EXEMPT_THRESHOLD,
   IRS_RETENTION_SERVICES,
