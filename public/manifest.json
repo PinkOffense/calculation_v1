@@ -1,0 +1,20 @@
+{
+  "name": "Calculadora de Salário Líquido - Portugal 2026",
+  "short_name": "Salário PT",
+  "description": "Calculadora de salário líquido para Portugal 2026. IRS, Segurança Social, comparação entre conta de outrem e trabalhador independente.",
+  "start_url": "/calculation_v1/",
+  "scope": "/calculation_v1/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#e8436f",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "pt",
+  "categories": ["finance", "utilities"]
+}

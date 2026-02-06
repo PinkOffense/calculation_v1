@@ -13,7 +13,6 @@ export interface SalaryInput {
   grossMonthly: number;
   dependents: number;
   maritalStatus: MaritalStatus;
-  hasDisability: boolean;
   region: Region;
 
   // Conta de Outrem specific

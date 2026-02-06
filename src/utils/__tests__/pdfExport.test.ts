@@ -44,17 +44,17 @@ describe('exportPdf', () => {
     vi.clearAllMocks();
   });
 
-  it('generates PDF for employed result and calls save', () => {
+  it('generates PDF for employed result and calls save', async () => {
     const input = createInput({ grossMonthly: 2000 });
     const result = calculateSalary(input);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     expect(mockSave).toHaveBeenCalledTimes(1);
     expect(mockSave).toHaveBeenCalledWith(expect.stringContaining('salario-pt-employed'));
   });
 
-  it('generates PDF for self-employed result', () => {
+  it('generates PDF for self-employed result', async () => {
     const input = createInput({
       employmentType: 'self_employed',
       grossMonthly: 3000,
@@ -62,30 +62,30 @@ describe('exportPdf', () => {
     });
     const result = calculateSalary(input);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     expect(mockSave).toHaveBeenCalledTimes(1);
     expect(mockSave).toHaveBeenCalledWith(expect.stringContaining('salario-pt-self_employed'));
   });
 
-  it('generates PDF for comparison result', () => {
+  it('generates PDF for comparison result', async () => {
     const input = createInput({
       employmentType: 'compare',
       grossMonthly: 2500,
     });
     const result = calculateSalary(input);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     expect(mockSave).toHaveBeenCalledTimes(1);
     expect(mockSave).toHaveBeenCalledWith(expect.stringContaining('salario-pt-comparison'));
   });
 
-  it('includes the header with correct title', () => {
+  it('includes the header with correct title', async () => {
     const input = createInput({ grossMonthly: 1500 });
     const result = calculateSalary(input);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     expect(mockText).toHaveBeenCalledWith(
       'Simulação Salarial',
@@ -94,20 +94,20 @@ describe('exportPdf', () => {
     );
   });
 
-  it('renders meal allowance info when present', () => {
+  it('renders meal allowance info when present', async () => {
     const input = createInput({
       grossMonthly: 2000,
       mealAllowancePerDay: 7.63,
     });
     const result = calculateSalary(input);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     const allTextCalls = mockText.mock.calls.map(c => c[0]);
     expect(allTextCalls.some((t: string) => t.includes('Sub. Alimentação'))).toBe(true);
   });
 
-  it('renders IRS Jovem info when active', () => {
+  it('renders IRS Jovem info when active', async () => {
     const input = createInput({
       grossMonthly: 2000,
       irsJovem: true,
@@ -115,18 +115,18 @@ describe('exportPdf', () => {
     });
     const result = calculateSalary(input);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     const allTextCalls = mockText.mock.calls.map(c => c[0]);
     expect(allTextCalls.some((t: string) => t.includes('IRS Jovem'))).toBe(true);
   });
 
-  it('filename includes current date', () => {
+  it('filename includes current date', async () => {
     const input = createInput({ grossMonthly: 1500 });
     const result = calculateSalary(input);
     const today = new Date().toISOString().slice(0, 10);
 
-    exportPdf(input, result);
+    await exportPdf(input, result);
 
     expect(mockSave).toHaveBeenCalledWith(expect.stringContaining(today));
   });

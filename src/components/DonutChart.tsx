@@ -31,9 +31,21 @@ export default function DonutChart({ segments, centerLabel, centerValue, size = 
     return acc;
   }, []);
 
+  const chartDescription = segments
+    .map(s => `${s.label}: ${formatCurrency(s.value)} (${formatPercent(s.value / total)})`)
+    .join(', ');
+
   return (
-    <div className="donut-chart-container">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <div className="donut-chart-container" role="figure" aria-label="Gráfico de distribuição salarial">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`Gráfico circular: ${chartDescription}`}
+      >
+        <title>Distribuição salarial - {centerLabel}: {centerValue}</title>
+
         {/* Background ring */}
         <circle
           cx={center}
@@ -64,6 +76,8 @@ export default function DonutChart({ segments, centerLabel, centerValue, size = 
               strokeLinecap="butt"
               transform={`rotate(-90 ${center} ${center})`}
               className="donut-segment"
+              role="graphics-symbol"
+              aria-label={`${segment.label}: ${formatCurrency(segment.value)}`}
               style={{
                 animationDelay: `${i * 0.15}s`,
                 opacity: hovered !== null && !isHovered ? 0.5 : 1,
@@ -98,15 +112,16 @@ export default function DonutChart({ segments, centerLabel, centerValue, size = 
         )}
       </svg>
 
-      <div className="donut-legend">
+      <div className="donut-legend" role="list" aria-label="Legenda do gráfico">
         {segments.map((segment, i) => (
           <div
             key={i}
             className={`legend-item ${hovered === i ? 'hovered' : ''}`}
+            role="listitem"
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
           >
-            <span className="legend-dot" style={{ backgroundColor: segment.color }} />
+            <span className="legend-dot" style={{ backgroundColor: segment.color }} aria-hidden="true" />
             <span className="legend-label">{segment.label}</span>
             <span className="legend-value">{formatCurrency(segment.value)}</span>
             <span className="legend-percent">{formatPercent(segment.value / total)}</span>

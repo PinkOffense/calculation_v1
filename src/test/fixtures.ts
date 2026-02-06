@@ -11,7 +11,6 @@ export function createInput(overrides: Partial<SalaryInput> = {}): SalaryInput {
     grossMonthly: 1500,
     dependents: 0,
     maritalStatus: 'single',
-    hasDisability: false,
     region: 'continente',
     mealAllowancePerDay: 7.63,
     mealAllowanceType: 'card',

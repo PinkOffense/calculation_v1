@@ -98,23 +98,6 @@ describe('EmployedFields', () => {
     expect(screen.queryByLabelText('Ano de Benefício')).not.toBeInTheDocument();
   });
 
-  it('shows extras toggle button', () => {
-    renderEmployedFields();
-    expect(screen.getByText('Mais opções')).toBeInTheDocument();
-  });
-
-  it('reveals disability checkbox on extras toggle', async () => {
-    const user = userEvent.setup();
-    renderEmployedFields();
-
-    expect(screen.queryByText('Portador de deficiência')).not.toBeInTheDocument();
-
-    await user.click(screen.getByText('Mais opções'));
-
-    expect(screen.getByText('Portador de deficiência')).toBeInTheDocument();
-    expect(screen.getByText('Menos opções')).toBeInTheDocument();
-  });
-
   it('shows section title in compare mode', () => {
     renderEmployedFields({}, true);
     expect(screen.getByText('Conta de Outrem')).toBeInTheDocument();

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { SalaryInput } from '../../utils';
 import { CONSTANTS } from '../../utils';
 
@@ -9,8 +8,6 @@ interface EmployedFieldsProps {
 }
 
 export function EmployedFields({ input, update, isCompare }: EmployedFieldsProps) {
-  const [showExtras, setShowExtras] = useState(false);
-
   return (
     <>
       {isCompare && <div className="form-section-title">Conta de Outrem</div>}
@@ -115,33 +112,6 @@ export function EmployedFields({ input, update, isCompare }: EmployedFieldsProps
         </div>
       )}
 
-      {/* Advanced toggle */}
-      <button
-        className="extras-toggle"
-        onClick={() => setShowExtras(!showExtras)}
-        type="button"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={showExtras ? 'rotated' : ''}>
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-        {showExtras ? 'Menos opções' : 'Mais opções'}
-      </button>
-
-      {showExtras && (
-        <div className="extras-section">
-          <div className="form-group checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={input.hasDisability}
-                onChange={(e) => update('hasDisability', e.target.checked)}
-              />
-              <span className="checkbox-custom" />
-              <span>Portador de deficiência</span>
-            </label>
-          </div>
-        </div>
-      )}
     </>
   );
 }
