@@ -1,6 +1,6 @@
 /* ========================================
-   Calculadora de Salário PT - Styles
-   Rose/Red accent theme with glassmorphism
+   Calculadora de Salário PT - Styles v2
+   Modern glassmorphism with dynamic effects
    ======================================== */
 
 :root {
@@ -13,6 +13,10 @@
   --rose-500: #d6336c;
   --rose-600: #c2255c;
   --rose-700: #a61e4d;
+
+  /* Purple accent */
+  --purple-400: #8b5cf6;
+  --purple-500: #7c3aed;
 
   /* Neutrals */
   --gray-50: #fafafa;
@@ -27,8 +31,8 @@
   --gray-900: #1a1a2e;
 
   /* Semantic */
-  --bg-primary: #f8f7fc;
-  --bg-card: rgba(255, 255, 255, 0.75);
+  --bg-primary: #f0eef6;
+  --bg-card: rgba(255, 255, 255, 0.72);
   --bg-card-solid: #ffffff;
   --accent: var(--rose-400);
   --accent-light: var(--rose-200);
@@ -36,15 +40,17 @@
   --text-primary: var(--gray-900);
   --text-secondary: var(--gray-500);
   --text-muted: var(--gray-400);
-  --border: var(--gray-200);
+  --border: rgba(255, 255, 255, 0.5);
+  --border-outer: rgba(0, 0, 0, 0.06);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --shadow-accent: 0 4px 20px rgba(232, 67, 111, 0.15);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-accent: 0 4px 24px rgba(232, 67, 111, 0.18);
+  --shadow-glow: 0 0 30px rgba(232, 67, 111, 0.12);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
 }
 
 /* ---- Reset & Base ---- */
@@ -80,62 +86,63 @@ body {
   min-height: 100vh;
   overflow: hidden;
   padding: 2rem 1.5rem 3rem;
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
-/* ---- Animated Background Blobs ---- */
+/* ---- Animated Background ---- */
 .bg-blob {
   position: fixed;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
+  filter: blur(90px);
+  opacity: 0.4;
   pointer-events: none;
   z-index: 0;
+  will-change: transform;
 }
 
 .blob-1 {
-  width: 400px;
-  height: 400px;
-  background: var(--rose-200);
-  top: -100px;
-  right: -80px;
-  animation: blobFloat1 18s ease-in-out infinite;
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, var(--rose-200), var(--purple-400));
+  top: -120px;
+  right: -100px;
+  animation: blobFloat1 20s ease-in-out infinite;
 }
 
 .blob-2 {
-  width: 300px;
-  height: 300px;
-  background: var(--rose-300);
-  bottom: -50px;
-  left: -60px;
-  animation: blobFloat2 22s ease-in-out infinite;
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, var(--rose-300), var(--rose-100));
+  bottom: -80px;
+  left: -80px;
+  animation: blobFloat2 24s ease-in-out infinite;
 }
 
 .blob-3 {
-  width: 250px;
-  height: 250px;
-  background: var(--rose-100);
-  top: 40%;
-  left: 50%;
-  animation: blobFloat3 15s ease-in-out infinite;
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, var(--rose-100), #c4b5fd);
+  top: 35%;
+  left: 45%;
+  animation: blobFloat3 16s ease-in-out infinite;
 }
 
 @keyframes blobFloat1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-40px, 60px) scale(1.1); }
-  66% { transform: translate(30px, -30px) scale(0.95); }
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(-50px, 70px) scale(1.12) rotate(10deg); }
+  66% { transform: translate(40px, -40px) scale(0.92) rotate(-5deg); }
 }
 
 @keyframes blobFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(50px, -40px) scale(1.05); }
-  66% { transform: translate(-30px, 30px) scale(0.9); }
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(60px, -50px) scale(1.08) rotate(-8deg); }
+  66% { transform: translate(-40px, 40px) scale(0.88) rotate(6deg); }
 }
 
 @keyframes blobFloat3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-60px, 40px) scale(1.15); }
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-70px, 50px) scale(1.18) rotate(12deg); }
 }
 
 /* ---- Header ---- */
@@ -144,6 +151,12 @@ body {
   z-index: 1;
   text-align: center;
   margin-bottom: 2.5rem;
+  animation: fadeSlideDown 0.6s ease-out;
+}
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .logo {
@@ -154,11 +167,18 @@ body {
   margin-bottom: 0.25rem;
 }
 
+.logo svg {
+  filter: drop-shadow(0 2px 8px rgba(232, 67, 111, 0.3));
+}
+
 .logo h1 {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.025em;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-500), var(--purple-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
 }
 
 .subtitle {
@@ -175,24 +195,31 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: start;
+  animation: fadeSlideUp 0.7s ease-out 0.1s both;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ---- Glass Card Base ---- */
 .input-form,
 .results-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 2rem;
   box-shadow: var(--shadow-md);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
 }
 
 .input-form:hover,
 .results-panel:hover {
   box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 /* ---- Input Form ---- */
@@ -207,18 +234,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--rose-400), var(--rose-300));
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(232, 67, 111, 0.25);
 }
 
 .form-header h2 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .form-group {
@@ -226,12 +255,25 @@ body {
 }
 
 .form-group label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: 0.375rem;
   letter-spacing: 0.01em;
+}
+
+.label-info {
+  display: inline-flex;
+  color: var(--text-muted);
+  cursor: help;
+  transition: color 0.2s;
+}
+
+.label-info:hover {
+  color: var(--accent);
 }
 
 .form-row {
@@ -256,15 +298,15 @@ body {
 .input-wrapper input[type="number"],
 .input-wrapper select {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: 0.65rem 0.9rem;
   font-size: 0.9375rem;
   font-family: inherit;
   color: var(--text-primary);
-  background: var(--bg-card-solid);
-  border: 1.5px solid var(--border);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.25s ease;
   -moz-appearance: textfield;
 }
 
@@ -277,7 +319,8 @@ body {
 .input-wrapper input:focus,
 .input-wrapper select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(232, 67, 111, 0.1);
+  box-shadow: 0 0 0 3px rgba(232, 67, 111, 0.1), var(--shadow-sm);
+  background: white;
 }
 
 .currency-input input {
@@ -290,7 +333,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-muted);
   pointer-events: none;
 }
@@ -324,6 +367,11 @@ body {
   font-size: 0.875rem !important;
   color: var(--text-secondary) !important;
   user-select: none;
+  transition: color 0.2s;
+}
+
+.checkbox-label:hover {
+  color: var(--text-primary) !important;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -331,30 +379,64 @@ body {
 }
 
 .checkbox-custom {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--gray-300);
+  border-radius: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   flex-shrink: 0;
 }
 
 .checkbox-label input:checked + .checkbox-custom {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-500));
+  border-color: var(--rose-400);
+  box-shadow: 0 2px 8px rgba(232, 67, 111, 0.25);
 }
 
 .checkbox-label input:checked + .checkbox-custom::after {
   content: '';
   position: absolute;
-  left: 4px;
-  top: 1px;
+  left: 5px;
+  top: 2px;
   width: 6px;
   height: 9px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+/* ---- Extras toggle button ---- */
+.extras-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.375rem 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.extras-toggle:hover {
+  color: var(--accent);
+}
+
+.extras-toggle svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.extras-toggle svg.rotated {
+  transform: rotate(180deg);
+}
+
+.extras-section {
+  animation: slideDown 0.25s ease-out;
 }
 
 /* ---- Results Panel ---- */
@@ -367,7 +449,8 @@ body {
 
 .results-header h2 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .view-toggle {
@@ -381,14 +464,14 @@ body {
 .view-toggle button {
   padding: 0.375rem 0.875rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 500;
   font-family: inherit;
   color: var(--text-secondary);
   background: transparent;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .view-toggle button.active {
@@ -404,11 +487,30 @@ body {
 /* ---- Hero Net Salary ---- */
 .net-salary-hero {
   text-align: center;
-  padding: 1.5rem 1rem;
+  padding: 1.75rem 1.25rem;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, var(--rose-50), var(--rose-100));
+  background: linear-gradient(135deg, var(--rose-50), var(--rose-100), rgba(139, 92, 246, 0.05));
   border-radius: var(--radius-lg);
   border: 1px solid var(--rose-200);
+  position: relative;
+  overflow: hidden;
+}
+
+.net-salary-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 50%, rgba(232, 67, 111, 0.06) 0%, transparent 50%);
+  animation: heroShimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes heroShimmer {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10%, -5%); }
 }
 
 .hero-label {
@@ -416,16 +518,21 @@ body {
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.375rem;
+  position: relative;
 }
 
 .hero-value {
   display: block;
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: var(--rose-400);
-  letter-spacing: -0.025em;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
   line-height: 1.2;
+  position: relative;
 }
 
 .hero-subtitle {
@@ -433,16 +540,17 @@ body {
   font-size: 0.75rem;
   color: var(--text-muted);
   margin-top: 0.375rem;
+  position: relative;
 }
 
 /* Value change animation */
 .animate-value {
-  animation: valuePopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: valuePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes valuePopIn {
-  0% { transform: scale(0.9); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0.88); opacity: 0.4; filter: blur(2px); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
 }
 
 /* ---- Donut Chart ---- */
@@ -455,6 +563,7 @@ body {
 
 .donut-chart-container svg {
   margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.06));
 }
 
 .donut-segment {
@@ -493,6 +602,13 @@ body {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.legend-item:hover {
+  background: var(--gray-50);
 }
 
 .legend-dot {
@@ -510,6 +626,7 @@ body {
 .legend-value {
   font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .legend-percent {
@@ -530,6 +647,17 @@ body {
   align-items: center;
   padding: 0.5rem 0;
   font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.breakdown-row.sub-detail {
+  padding: 0 0 0.25rem;
+}
+
+.breakdown-row.sub-detail .breakdown-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .breakdown-label {
@@ -582,6 +710,7 @@ body {
 .breakdown-row.total .breakdown-value {
   font-size: 1.125rem;
   color: var(--rose-400);
+  font-weight: 700;
 }
 
 .breakdown-divider {
@@ -591,7 +720,7 @@ body {
 }
 
 .breakdown-divider.accent {
-  background: linear-gradient(90deg, var(--rose-200), transparent);
+  background: linear-gradient(90deg, var(--rose-200), var(--rose-100), transparent);
   height: 2px;
 }
 
@@ -601,6 +730,7 @@ body {
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
+  border: 1px solid var(--gray-200);
 }
 
 .employer-section h3 {
@@ -637,23 +767,27 @@ body {
 
 .rate-card {
   text-align: center;
-  padding: 1rem;
+  padding: 1.125rem;
   background: linear-gradient(135deg, var(--rose-50), white);
   border: 1px solid var(--rose-100);
   border-radius: var(--radius-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .rate-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-accent);
+  border-color: var(--rose-200);
 }
 
 .rate-value {
   display: block;
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: var(--rose-400);
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   letter-spacing: -0.02em;
 }
 
@@ -674,7 +808,8 @@ body {
   text-align: center;
   margin-top: 3rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  animation: fadeSlideUp 0.7s ease-out 0.3s both;
 }
 
 .app-footer p {
@@ -699,8 +834,13 @@ body {
     padding: 1.5rem;
   }
 
+  .input-form:hover,
+  .results-panel:hover {
+    transform: none;
+  }
+
   .hero-value {
-    font-size: 1.875rem;
+    font-size: 2rem;
   }
 
   .form-row {
@@ -708,13 +848,13 @@ body {
   }
 
   .blob-1 {
-    width: 250px;
-    height: 250px;
+    width: 300px;
+    height: 300px;
   }
 
   .blob-2 {
-    width: 200px;
-    height: 200px;
+    width: 250px;
+    height: 250px;
   }
 
   .blob-3 {
@@ -738,7 +878,7 @@ body {
   }
 
   .hero-value {
-    font-size: 1.625rem;
+    font-size: 1.75rem;
   }
 
   .rates-section {
@@ -747,16 +887,16 @@ body {
   }
 
   .rate-card {
-    padding: 0.75rem;
+    padding: 0.875rem;
   }
 
   .rate-value {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
   }
 }
 
 /* ============================================================
-   NEW: Employment Type Toggle
+   Employment Type Toggle
    ============================================================ */
 .employment-toggle {
   display: flex;
@@ -765,6 +905,7 @@ body {
   padding: 4px;
   gap: 4px;
   margin-bottom: 1.5rem;
+  border: 1px solid var(--gray-200);
 }
 
 .employment-toggle button {
@@ -788,12 +929,12 @@ body {
 .employment-toggle button.active {
   background: white;
   color: var(--accent);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .employment-toggle button:hover:not(.active) {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .employment-toggle button svg {
@@ -801,21 +942,32 @@ body {
 }
 
 /* ============================================================
-   NEW: Form Section Title (for self-employed)
+   Form Section Title
    ============================================================ */
 .form-section-title {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 1.25rem 0 0.75rem;
   padding-top: 1rem;
   border-top: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-section-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-300));
+  border-radius: 2px;
 }
 
 /* ============================================================
-   NEW: Hint Boxes
+   Hint Boxes
    ============================================================ */
 .form-hint-box {
   font-size: 0.75rem;
@@ -826,6 +978,11 @@ body {
   margin-bottom: 1rem;
   line-height: 1.5;
   border-left: 3px solid var(--gray-300);
+  transition: border-color 0.2s;
+}
+
+.form-hint-box:hover {
+  border-left-color: var(--gray-400);
 }
 
 .form-hint-box.info {
@@ -834,18 +991,22 @@ body {
   color: var(--text-secondary);
 }
 
+.form-hint-box.info:hover {
+  border-left-color: var(--accent);
+}
+
 /* ============================================================
-   NEW: IRS Jovem year selector (animated appear)
+   IRS Jovem year selector (animated appear)
    ============================================================ */
 .irs-jovem-year {
-  animation: slideDown 0.25s ease-out;
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding-left: 1.75rem;
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -854,23 +1015,30 @@ body {
 }
 
 /* ============================================================
-   NEW: Hero Badge (IRS Jovem savings)
+   Hero Badge (IRS Jovem savings)
    ============================================================ */
 .hero-badge {
   display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.75rem;
+  margin-top: 0.625rem;
+  padding: 0.3rem 0.875rem;
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--rose-600);
-  background: rgba(232, 67, 111, 0.1);
-  border: 1px solid rgba(232, 67, 111, 0.2);
+  background: rgba(232, 67, 111, 0.08);
+  border: 1px solid rgba(232, 67, 111, 0.15);
   border-radius: 999px;
   letter-spacing: 0.02em;
+  position: relative;
+  animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 67, 111, 0.1); }
+  50% { box-shadow: 0 0 0 6px rgba(232, 67, 111, 0); }
 }
 
 /* ============================================================
-   NEW: Equivalence Card (self-employed comparison)
+   Equivalence Card (self-employed comparison)
    ============================================================ */
 .equivalence-card {
   display: flex;
@@ -881,11 +1049,11 @@ body {
   background: linear-gradient(135deg, var(--rose-50), var(--rose-100));
   border: 1px solid var(--rose-200);
   border-radius: var(--radius-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .equivalence-card:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-accent);
 }
 
@@ -919,8 +1087,11 @@ body {
 
 .equivalence-value {
   font-size: 1.375rem;
-  font-weight: 700;
-  color: var(--accent);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -1034,7 +1205,7 @@ body {
   background: var(--gray-50);
   border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-md);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .comparison-hero-card.winner {
@@ -1073,14 +1244,17 @@ body {
 .comp-hero-value {
   display: block;
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--gray-700);
   letter-spacing: -0.025em;
   line-height: 1.2;
 }
 
 .comparison-hero-card.winner .comp-hero-value {
-  color: var(--rose-400);
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .comp-hero-sub {
@@ -1132,6 +1306,11 @@ body {
   padding: 0.5rem 1rem;
   font-size: 0.8125rem;
   align-items: center;
+  transition: background 0.15s;
+}
+
+.comp-breakdown-row:hover {
+  background: rgba(0, 0, 0, 0.015);
 }
 
 .comp-breakdown-label {
@@ -1236,16 +1415,16 @@ body {
 }
 
 .comp-rate-bar-track {
-  height: 8px;
+  height: 10px;
   background: var(--gray-100);
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
 .comp-rate-bar-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
+  border-radius: 5px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .comp-rate-bar-fill.employed {

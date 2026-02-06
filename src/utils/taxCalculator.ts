@@ -40,18 +40,23 @@ export interface SalaryInput {
   numberOfMonths: 14 | 12;
   irsJovem: boolean;
   irsJovemYear: number; // 1-10
+  otherTaxableIncome: number; // Overtime, shift pay, bonuses — subject to IRS+SS
 
   // Trabalhador Independente specific
   activityType: ActivityType;
   vatRegime: VatRegime;
   fiscalRegime: FiscalRegime;
   monthlyExpenses: number; // For organized accounting
+  selfEmployedFirstYear: boolean;    // 1st year activity — 12-month SS exemption
+  selfEmployedExemptRetention: boolean; // Exempt from IRS withholding at source
 }
 
 export interface EmployedResult {
   type: 'employed';
   // Monthly
   grossMonthly: number;
+  otherTaxableIncome: number;
+  totalGrossMonthly: number; // gross + other taxable
   ssEmployee: number;
   irsWithholding: number;
   irsJovemDiscount: number;
@@ -308,13 +313,18 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   const {
     grossMonthly, dependents, maritalStatus, mealAllowancePerDay,
     mealAllowanceType, numberOfMonths, region, irsJovem, irsJovemYear,
+    otherTaxableIncome,
   } = input;
 
-  // Social Security (employee)
-  const ssEmployee = round2(grossMonthly * SS_EMPLOYEE_RATE);
+  // Total gross = base salary + other taxable supplements (overtime, shift, bonuses)
+  const otherTaxable = Math.max(0, otherTaxableIncome || 0);
+  const totalGrossMonthly = round2(grossMonthly + otherTaxable);
 
-  // IRS withholding — applied to GROSS salary (tables already account for SS)
-  let irsWithholding = calculateIrsWithholding(grossMonthly, maritalStatus, dependents, region);
+  // Social Security (employee) — applied to total gross
+  const ssEmployee = round2(totalGrossMonthly * SS_EMPLOYEE_RATE);
+
+  // IRS withholding — applied to total GROSS salary (tables already account for SS)
+  let irsWithholding = calculateIrsWithholding(totalGrossMonthly, maritalStatus, dependents, region);
 
   // IRS Jovem discount
   let irsJovemDiscount = 0;
@@ -325,7 +335,7 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   }
 
   // Net monthly salary
-  const netMonthly = round2(grossMonthly - ssEmployee - irsWithholding);
+  const netMonthly = round2(totalGrossMonthly - ssEmployee - irsWithholding);
 
   // Meal allowance (exempt portion depends on cash vs card)
   const mealExemptLimit = mealAllowanceType === 'card'
@@ -336,8 +346,8 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   );
   const totalNetMonthly = round2(netMonthly + mealAllowanceMonthly);
 
-  // Annual calculations
-  const grossAnnual = round2(grossMonthly * numberOfMonths);
+  // Annual calculations — base salary paid in 14/12 months, supplements paid in 12
+  const grossAnnual = round2(grossMonthly * numberOfMonths + otherTaxable * 12);
   const ssAnnualEmployee = round2(ssEmployee * numberOfMonths);
   const irsAnnual = round2(irsWithholding * numberOfMonths);
   const netAnnual = round2(grossAnnual - ssAnnualEmployee - irsAnnual);
@@ -345,18 +355,19 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   const totalNetAnnual = round2(netAnnual + mealAllowanceAnnual);
 
   // Employer costs
-  const ssEmployer = round2(grossMonthly * SS_EMPLOYER_RATE);
+  const ssEmployer = round2(totalGrossMonthly * SS_EMPLOYER_RATE);
   const ssEmployerAnnual = round2(ssEmployer * numberOfMonths);
   const totalEmployerCostAnnual = round2(grossAnnual + ssEmployerAnnual);
 
   // Effective rates
-  const irsRate = grossMonthly > 0 ? irsWithholding / grossMonthly : 0;
+  const irsRate = totalGrossMonthly > 0 ? irsWithholding / totalGrossMonthly : 0;
   const effectiveIrsRate = grossAnnual > 0 ? irsAnnual / grossAnnual : 0;
   const effectiveTotalRate = grossAnnual > 0 ? (irsAnnual + ssAnnualEmployee) / grossAnnual : 0;
 
   return {
     type: 'employed',
-    grossMonthly, ssEmployee, irsWithholding, irsJovemDiscount, netMonthly,
+    grossMonthly, otherTaxableIncome: otherTaxable, totalGrossMonthly,
+    ssEmployee, irsWithholding, irsJovemDiscount, netMonthly,
     mealAllowanceMonthly, totalNetMonthly,
     grossAnnual, ssAnnualEmployee, irsAnnual, netAnnual,
     mealAllowanceAnnual, totalNetAnnual,
@@ -374,25 +385,31 @@ function calculateSelfEmployed(input: SalaryInput): SelfEmployedResult {
   const {
     grossMonthly, activityType, vatRegime, fiscalRegime,
     monthlyExpenses, region, dependents, maritalStatus,
+    selfEmployedFirstYear, selfEmployedExemptRetention,
   } = input;
 
   const grossAnnual = round2(grossMonthly * 12);
 
   // IRS Withholding at source (Art. 101 CIRS)
   // Services: 23%, Sales: 0% (no withholding)
-  const irsWithholdingRate = activityType === 'services'
+  // Can be exempt if turnover < threshold in previous year
+  let irsWithholdingRate = activityType === 'services'
     ? IRS_RETENTION_SERVICES
     : IRS_RETENTION_SALES;
+  if (selfEmployedExemptRetention) {
+    irsWithholdingRate = 0;
+  }
   const irsWithholding = round2(grossMonthly * irsWithholdingRate);
 
   // Social Security (self-employed)
   // Base: 70% for services, 20% for sales/production
+  // First year of activity: 12-month exemption (Art. 157 Código Contributivo)
   const ssIncomeBase = activityType === 'services'
     ? SS_SELF_EMPLOYED_BASE_SERVICES
     : SS_SELF_EMPLOYED_BASE_SALES;
   const ssBase = round2(grossMonthly * ssIncomeBase);
   const ssRate = SS_SELF_EMPLOYED_RATE;
-  const ssContribution = round2(ssBase * ssRate);
+  const ssContribution = selfEmployedFirstYear ? 0 : round2(ssBase * ssRate);
   const ssAnnual = round2(ssContribution * 12);
 
   // IVA (VAT)

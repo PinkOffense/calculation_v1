@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { SalaryInput, EmploymentType } from '../utils/taxCalculator';
 import { CONSTANTS } from '../utils/taxCalculator';
 
@@ -17,6 +18,8 @@ export default function InputForm({ input, onChange }: InputFormProps) {
 
   const showEmployedFields = isEmployed || isCompare;
   const showSelfEmployedFields = isSelfEmployed || isCompare;
+
+  const [showExtras, setShowExtras] = useState(false);
 
   return (
     <div className="input-form">
@@ -124,7 +127,7 @@ export default function InputForm({ input, onChange }: InputFormProps) {
         </div>
       </div>
 
-      {/* Dependents + Months (employed) or Dependents (self-employed) */}
+      {/* Dependents + Months */}
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="dependents">Dependentes</label>
@@ -196,6 +199,35 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             </span>
           </div>
 
+          {/* Other Taxable Income (overtime, bonuses, shift pay) */}
+          <div className="form-group">
+            <label htmlFor="otherTaxableIncome">
+              Complementos Tributáveis / mês
+              <span className="label-info" title="Horas extra, subsídio de turno, prémios, isenção de horário, comissões, etc. Sujeitos a IRS + Segurança Social.">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+              </span>
+            </label>
+            <div className="input-wrapper currency-input">
+              <input
+                id="otherTaxableIncome"
+                type="number"
+                min="0"
+                step="25"
+                value={input.otherTaxableIncome || ''}
+                onChange={(e) => update('otherTaxableIncome', Math.max(0, Number(e.target.value)))}
+                placeholder="0"
+              />
+              <span className="input-suffix">€</span>
+            </div>
+            <span className="form-hint">
+              Horas extra, turnos, prémios, comissões (sujeitos a IRS + SS)
+            </span>
+          </div>
+
           {/* IRS Jovem */}
           <div className="form-group checkbox-group">
             <label className="checkbox-label">
@@ -233,17 +265,31 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             </div>
           )}
 
-          {!isCompare && (
-            <div className="form-group checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={input.hasDisability}
-                  onChange={(e) => update('hasDisability', e.target.checked)}
-                />
-                <span className="checkbox-custom" />
-                <span>Portador de deficiência</span>
-              </label>
+          {/* Advanced toggle */}
+          <button
+            className="extras-toggle"
+            onClick={() => setShowExtras(!showExtras)}
+            type="button"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={showExtras ? 'rotated' : ''}>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            {showExtras ? 'Menos opções' : 'Mais opções'}
+          </button>
+
+          {showExtras && (
+            <div className="extras-section">
+              <div className="form-group checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={input.hasDisability}
+                    onChange={(e) => update('hasDisability', e.target.checked)}
+                  />
+                  <span className="checkbox-custom" />
+                  <span>Portador de deficiência</span>
+                </label>
+              </div>
             </div>
           )}
         </>
@@ -267,7 +313,9 @@ export default function InputForm({ input, onChange }: InputFormProps) {
               </select>
             </div>
             <span className="form-hint">
-              Retenção na fonte: {input.activityType === 'services' ? '23%' : 'Sem retenção'}
+              Retenção na fonte: {input.selfEmployedExemptRetention
+                ? 'Isento'
+                : input.activityType === 'services' ? '23%' : 'Sem retenção'}
             </span>
           </div>
 
@@ -325,16 +373,51 @@ export default function InputForm({ input, onChange }: InputFormProps) {
             </div>
           )}
 
+          {/* Exemptions */}
+          <div className="form-group checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={input.selfEmployedFirstYear}
+                onChange={(e) => update('selfEmployedFirstYear', e.target.checked)}
+              />
+              <span className="checkbox-custom" />
+              <span>1.º ano de atividade (isento SS 12 meses)</span>
+            </label>
+          </div>
+
+          {input.activityType === 'services' && (
+            <div className="form-group checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={input.selfEmployedExemptRetention}
+                  onChange={(e) => update('selfEmployedExemptRetention', e.target.checked)}
+                />
+                <span className="checkbox-custom" />
+                <span>Isento de retenção na fonte</span>
+              </label>
+              <span className="form-hint" style={{ paddingLeft: '1.75rem' }}>
+                Rendimentos &lt; €14.500 no ano anterior
+              </span>
+            </div>
+          )}
+
           {/* SS Info */}
           <div className="form-hint-box info">
-            SS: {(CONSTANTS.SS_SELF_EMPLOYED_RATE * 100).toFixed(1)}% sobre{' '}
-            {input.activityType === 'services'
-              ? `${(CONSTANTS.SS_SELF_EMPLOYED_BASE_SERVICES * 100).toFixed(0)}%`
-              : `${(CONSTANTS.SS_SELF_EMPLOYED_BASE_SALES * 100).toFixed(0)}%`}{' '}
-            do rendimento (efetivo ≈{' '}
-            {input.activityType === 'services'
-              ? (CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_BASE_SERVICES * 100).toFixed(1)
-              : (CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_BASE_SALES * 100).toFixed(1)}%)
+            {input.selfEmployedFirstYear
+              ? 'SS: Isento nos primeiros 12 meses de atividade (Art. 157 Código Contributivo)'
+              : <>
+                  SS: {(CONSTANTS.SS_SELF_EMPLOYED_RATE * 100).toFixed(1)}% sobre{' '}
+                  {input.activityType === 'services'
+                    ? `${(CONSTANTS.SS_SELF_EMPLOYED_BASE_SERVICES * 100).toFixed(0)}%`
+                    : `${(CONSTANTS.SS_SELF_EMPLOYED_BASE_SALES * 100).toFixed(0)}%`}{' '}
+                  do rendimento (efetivo ≈{' '}
+                  {input.activityType === 'services'
+                    ? (CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_BASE_SERVICES * 100).toFixed(1)
+                    : (CONSTANTS.SS_SELF_EMPLOYED_RATE * CONSTANTS.SS_SELF_EMPLOYED_BASE_SALES * 100).toFixed(1)}%)
+                </>
+            }
           </div>
         </>
       )}

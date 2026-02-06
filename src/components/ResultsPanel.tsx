@@ -11,7 +11,8 @@ function EmployedResults({ result }: { result: EmployedResult }) {
   const [view, setView] = useState<'monthly' | 'annual'>('monthly');
   const m = view === 'monthly';
 
-  const gross = m ? result.grossMonthly : result.grossAnnual;
+  const gross = m ? result.totalGrossMonthly : result.grossAnnual;
+  const hasSupplements = result.otherTaxableIncome > 0;
   const ss = m ? result.ssEmployee : result.ssAnnualEmployee;
   const irs = m ? result.irsWithholding : result.irsAnnual;
   const net = m ? result.netMonthly : result.netAnnual;
@@ -63,9 +64,18 @@ function EmployedResults({ result }: { result: EmployedResult }) {
 
       <div className="breakdown-table">
         <div className="breakdown-row gross">
-          <span className="breakdown-label">Salário Bruto</span>
+          <span className="breakdown-label">
+            {hasSupplements ? 'Remuneração Total' : 'Salário Bruto'}
+          </span>
           <span className="breakdown-value">{formatCurrency(gross)}</span>
         </div>
+        {hasSupplements && (
+          <div className="breakdown-row sub-detail">
+            <span className="breakdown-label">
+              Base {formatCurrency(m ? result.grossMonthly : result.grossAnnual - result.otherTaxableIncome * 12)} + Complementos {formatCurrency(m ? result.otherTaxableIncome : result.otherTaxableIncome * 12)}
+            </span>
+          </div>
+        )}
         <div className="breakdown-divider" />
         <div className="breakdown-row deduction">
           <span className="breakdown-label">
@@ -279,7 +289,7 @@ function ComparisonResults({ result }: { result: ComparisonResult }) {
   const seNet = m ? se.totalNetMonthly : se.totalNetAnnual;
   const netDiff = m ? diff.monthlyNet : diff.annualNet;
 
-  const empGross = m ? emp.grossMonthly : emp.grossAnnual;
+  const empGross = m ? emp.totalGrossMonthly : emp.grossAnnual;
   const seGross = m ? se.grossMonthly : se.grossAnnual;
 
   const empSS = m ? emp.ssEmployee : emp.ssAnnualEmployee;
