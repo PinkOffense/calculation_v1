@@ -1,0 +1,90 @@
+{
+  "version": "2026.1",
+  "year": 2026,
+  "publishedAt": "2026-01-06",
+  "source": "Despacho n.º 233-A/2026, 6 de janeiro",
+  "updatedAt": "2026-01-15",
+
+  "socialSecurity": {
+    "employeeRate": 0.11,
+    "employerRate": 0.2375,
+    "selfEmployedRate": 0.214,
+    "selfEmployedBaseServices": 0.70,
+    "selfEmployedBaseSales": 0.20
+  },
+
+  "mealAllowance": {
+    "exemptCash": 6.15,
+    "exemptCard": 10.46,
+    "workingDaysPerMonth": 22,
+    "workingMonthsForMeal": 11
+  },
+
+  "vat": {
+    "standardRate": 0.23,
+    "exemptThreshold": 15000
+  },
+
+  "irsRetention": {
+    "services": 0.23,
+    "sales": 0
+  },
+
+  "simplifiedCoefficients": {
+    "services": 0.75,
+    "sales": 0.15
+  },
+
+  "specificDeductionAnnual": 4104,
+
+  "dependentDeductions": {
+    "single": 34.29,
+    "marriedTwoHolders": 21.43,
+    "marriedSingleHolder": 42.86
+  },
+
+  "irsJovemExemption": {
+    "1": 1.0,
+    "2": 0.75, "3": 0.75, "4": 0.75,
+    "5": 0.50, "6": 0.50, "7": 0.50,
+    "8": 0.25, "9": 0.25, "10": 0.25
+  },
+
+  "regionalMultipliers": {
+    "continente": 1.0,
+    "acores": 0.70,
+    "madeira": 0.70
+  },
+
+  "irsBrackets": {
+    "single": [
+      { "upTo": 920,    "rate": 0,       "deduction": 0 },
+      { "upTo": 1042,   "rate": 0.45,    "deduction": 414.00 },
+      { "upTo": 1108,   "rate": 0.36895, "deduction": 329.47 },
+      { "upTo": 1154,   "rate": 0.157,   "deduction": 94.71 },
+      { "upTo": 1212,   "rate": 0.212,   "deduction": 158.18 },
+      { "upTo": 1819,   "rate": 0.241,   "deduction": 193.33 },
+      { "upTo": 2119,   "rate": 0.311,   "deduction": 320.66 },
+      { "upTo": 2499,   "rate": 0.349,   "deduction": 401.19 },
+      { "upTo": 3305,   "rate": 0.3836,  "deduction": 487.66 },
+      { "upTo": 5547,   "rate": 0.3969,  "deduction": 531.62 },
+      { "upTo": 20221,  "rate": 0.4495,  "deduction": 823.40 },
+      { "upTo": null,   "rate": 0.4717,  "deduction": 1272.31 }
+    ],
+    "marriedSingleHolder": [
+      { "upTo": 991,    "rate": 0,       "deduction": 0 },
+      { "upTo": 1042,   "rate": 0.45,    "deduction": 445.95 },
+      { "upTo": 1108,   "rate": 0.29375, "deduction": 283.13 },
+      { "upTo": 1119,   "rate": 0.125,   "deduction": 96.17 },
+      { "upTo": 1432,   "rate": 0.1272,  "deduction": 98.64 },
+      { "upTo": 1962,   "rate": 0.157,   "deduction": 141.32 },
+      { "upTo": 2240,   "rate": 0.1938,  "deduction": 213.53 },
+      { "upTo": 2773,   "rate": 0.2277,  "deduction": 289.47 },
+      { "upTo": 3389,   "rate": 0.257,   "deduction": 370.72 },
+      { "upTo": 5965,   "rate": 0.2881,  "deduction": 476.12 },
+      { "upTo": 20265,  "rate": 0.3843,  "deduction": 1049.96 },
+      { "upTo": null,   "rate": 0.4717,  "deduction": 2821.13 }
+    ],
+    "marriedTwoHolders": "single"
+  }
+}

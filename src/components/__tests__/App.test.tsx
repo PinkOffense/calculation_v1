@@ -7,6 +7,16 @@ vi.mock('../../hooks/useAnimatedValue', () => ({
   useAnimatedValue: (v: number) => v,
 }));
 
+// Mock useTaxTables to avoid network fetches in tests
+vi.mock('../../hooks/useTaxTables', () => ({
+  useTaxTables: () => ({
+    tables: null,
+    version: '2026.1',
+    loading: false,
+    error: false,
+  }),
+}));
+
 describe('App — full integration', () => {
   it('renders the app header', () => {
     render(<App />);

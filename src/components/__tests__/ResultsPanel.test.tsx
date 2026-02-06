@@ -10,6 +10,11 @@ vi.mock('../../hooks/useAnimatedValue', () => ({
   useAnimatedValue: (v: number) => v,
 }));
 
+// Mock pdfExport to avoid jsPDF in DOM tests
+vi.mock('../../utils/pdfExport', () => ({
+  exportPdf: vi.fn(),
+}));
+
 describe('ResultsPanel — employed results', () => {
   const input = createInput({ grossMonthly: 1500 });
   const result = calculateSalary(input) as EmployedResult;
@@ -162,5 +167,33 @@ describe('ResultsPanel — comparison results', () => {
     render(<ResultsPanel result={result} />);
     const irsHeaders = screen.getAllByText('Taxa Efetiva IRS');
     expect(irsHeaders.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('ResultsPanel — PDF export button', () => {
+  it('shows export button when input is provided', () => {
+    const input = createInput({ grossMonthly: 1500 });
+    const result = calculateSalary(input) as EmployedResult;
+    render(<ResultsPanel result={result} input={input} />);
+    expect(screen.getByText('Exportar PDF')).toBeInTheDocument();
+  });
+
+  it('does not show export button when input is not provided', () => {
+    const input = createInput({ grossMonthly: 1500 });
+    const result = calculateSalary(input) as EmployedResult;
+    render(<ResultsPanel result={result} />);
+    expect(screen.queryByText('Exportar PDF')).not.toBeInTheDocument();
+  });
+
+  it('calls exportPdf when button is clicked', async () => {
+    const { exportPdf } = await import('../../utils/pdfExport');
+    const user = userEvent.setup();
+    const input = createInput({ grossMonthly: 2000 });
+    const result = calculateSalary(input) as EmployedResult;
+    render(<ResultsPanel result={result} input={input} />);
+
+    await user.click(screen.getByText('Exportar PDF'));
+
+    expect(exportPdf).toHaveBeenCalledWith(input, result);
   });
 });
