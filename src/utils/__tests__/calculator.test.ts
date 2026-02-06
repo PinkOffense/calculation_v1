@@ -272,6 +272,65 @@ describe('calculateSalary — employed', () => {
       expect(result.effectiveIrsRate).toBeGreaterThan(0.25);
     });
   });
+
+  describe('very high salary (€25,000 — top bracket)', () => {
+    const result = calculateSalary(createInput({ grossMonthly: 25000, mealAllowancePerDay: 0 })) as EmployedResult;
+
+    it('uses the top IRS bracket', () => {
+      // Top bracket: rate 0.4717, deduction 1272.31
+      const expectedIrs = r2(25000 * 0.4717 - 1272.31);
+      expect(result.irsWithholding).toBe(expectedIrs);
+    });
+
+    it('SS is 11% of gross', () => {
+      expect(result.ssEmployee).toBe(r2(25000 * 0.11));
+    });
+
+    it('net is positive and less than gross', () => {
+      expect(result.netMonthly).toBeGreaterThan(0);
+      expect(result.netMonthly).toBeLessThan(25000);
+    });
+
+    it('effective total rate is between 40% and 60%', () => {
+      expect(result.effectiveTotalRate).toBeGreaterThan(0.4);
+      expect(result.effectiveTotalRate).toBeLessThan(0.6);
+    });
+
+    it('employer cost includes full annual gross + SS', () => {
+      expect(result.totalEmployerCostAnnual).toBe(
+        r2(result.grossAnnual + result.ssEmployerAnnual)
+      );
+    });
+  });
+
+  describe('negative gross is clamped to zero', () => {
+    const result = calculateSalary(createInput({ grossMonthly: -500, mealAllowancePerDay: 0 })) as EmployedResult;
+
+    it('treats negative gross as zero', () => {
+      expect(result.grossMonthly).toBe(0);
+      expect(result.ssEmployee).toBe(0);
+      expect(result.irsWithholding).toBe(0);
+      expect(result.netMonthly).toBe(0);
+    });
+  });
+
+  describe('employer cost includes full meal allowance', () => {
+    const result = calculateSalary(createInput({
+      grossMonthly: 2000,
+      mealAllowancePerDay: 10,
+      mealAllowanceType: 'card',
+    })) as EmployedResult;
+
+    it('total employer cost includes exempt + taxable meal + SS', () => {
+      expect(result.totalEmployerCostAnnual).toBe(
+        r2(result.grossAnnual + result.mealAllowanceAnnual + result.ssEmployerAnnual)
+      );
+    });
+
+    it('meal allowance annual is 11 months', () => {
+      expect(result.mealAllowanceAnnual).toBe(r2(10 * 22 * 11));
+    });
+  });
 });
 
 // ============================================================
@@ -450,6 +509,54 @@ describe('calculateSalary — self-employed', () => {
       expect(result.ssContribution).toBe(0);
       expect(result.netMonthly).toBe(0);
     });
+
+    it('equivalent employed gross is zero', () => {
+      expect(result.equivalentGrossEmployed).toBe(0);
+    });
+
+    it('effective rates are zero', () => {
+      expect(result.effectiveIrsRate).toBe(0);
+      expect(result.effectiveTotalRate).toBe(0);
+    });
+  });
+
+  describe('very high salary self-employed (€25,000 services)', () => {
+    const input = createInput({
+      employmentType: 'self_employed',
+      grossMonthly: 25000,
+      activityType: 'services',
+    });
+    const result = calculateSalary(input) as SelfEmployedResult;
+
+    it('net is positive and less than gross', () => {
+      expect(result.netMonthly).toBeGreaterThan(0);
+      expect(result.netMonthly).toBeLessThan(25000);
+    });
+
+    it('IRS withholding is 23% of gross', () => {
+      expect(result.irsWithholding).toBeCloseTo(25000 * 0.23, 0);
+    });
+
+    it('SS is on 70% base', () => {
+      expect(result.ssBase).toBe(r2(25000 * 0.70));
+      expect(result.ssContribution).toBe(r2(result.ssBase * 0.214));
+    });
+
+    it('equivalent employed gross is positive and reasonable', () => {
+      expect(result.equivalentGrossEmployed).toBeGreaterThan(0);
+      // Equivalent should be higher than self-employed gross (higher tax burden as employed)
+      expect(result.equivalentGrossEmployed).toBeGreaterThan(result.grossMonthly);
+    });
+  });
+
+  describe('negative gross self-employed is clamped to zero', () => {
+    const input = createInput({ employmentType: 'self_employed', grossMonthly: -1000 });
+    const result = calculateSalary(input) as SelfEmployedResult;
+
+    it('treats negative gross as zero', () => {
+      expect(result.grossMonthly).toBe(0);
+      expect(result.netMonthly).toBe(0);
+    });
   });
 });
 
@@ -540,7 +647,7 @@ describe('calculateSalary — routing', () => {
 // ============================================================
 
 describe('calculation invariants', () => {
-  const salaries = [820, 1000, 1500, 2000, 3000, 5000, 8000];
+  const salaries = [0, 500, 820, 1000, 1500, 2000, 3000, 5000, 8000, 10000, 15000, 20000, 25000];
 
   it.each(salaries)('employed: net ≤ gross for €%d', (salary) => {
     const result = calculateSalary(createInput({ grossMonthly: salary })) as EmployedResult;
@@ -579,8 +686,8 @@ describe('calculation invariants', () => {
   });
 
   it('higher salary → higher net (net increases with gross)', () => {
-    let prevNet = 0;
-    for (const salary of [1000, 1500, 2000, 3000, 5000]) {
+    let prevNet = -1;
+    for (const salary of [0, 1000, 1500, 2000, 3000, 5000, 10000, 15000, 20000, 25000]) {
       const result = calculateSalary(createInput({ grossMonthly: salary })) as EmployedResult;
       expect(result.netMonthly).toBeGreaterThan(prevNet);
       prevNet = result.netMonthly;
