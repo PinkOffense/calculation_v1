@@ -24,6 +24,7 @@ export interface SalaryInput {
 
   // Conta de Outrem specific
   mealAllowancePerDay: number;
+  mealAllowanceType: 'cash' | 'card';
   numberOfMonths: 14 | 12;
   irsJovem: boolean;
   irsJovemYear: 1 | 2 | 3 | 4 | 5; // Year of benefit (1st-5th)
@@ -127,8 +128,9 @@ const SS_EMPLOYER_RATE = 0.2375;
 const SS_SELF_EMPLOYED_RATE = 0.214; // 21.4%
 const SS_SELF_EMPLOYED_INCOME_BASE = 0.70; // Applied on 70% of income
 
-// Meal allowance (2026)
-const MEAL_ALLOWANCE_EXEMPT_CASH = 6.0; // €6.00/day cash exempt
+// Meal allowance (2026 — Acordo Plurianual Função Pública)
+const MEAL_ALLOWANCE_EXEMPT_CASH = 6.15;  // €6.15/day cash exempt
+const MEAL_ALLOWANCE_EXEMPT_CARD = 10.46; // €10.46/day card exempt (6.15 × 1.70)
 const WORKING_DAYS_PER_MONTH = 22;
 const WORKING_MONTHS_FOR_MEAL = 11;
 
@@ -264,7 +266,7 @@ function calculateIrsWithholding(
 function calculateEmployed(input: SalaryInput): EmployedResult {
   const {
     grossMonthly, dependents, maritalStatus, mealAllowancePerDay,
-    numberOfMonths, region, irsJovem, irsJovemYear,
+    mealAllowanceType, numberOfMonths, region, irsJovem, irsJovemYear,
   } = input;
 
   // Social Security (employee)
@@ -287,9 +289,12 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   // Net monthly salary
   const netMonthly = round2(grossMonthly - ssEmployee - irsWithholding);
 
-  // Meal allowance
+  // Meal allowance (exempt portion depends on cash vs card)
+  const mealExemptLimit = mealAllowanceType === 'card'
+    ? MEAL_ALLOWANCE_EXEMPT_CARD
+    : MEAL_ALLOWANCE_EXEMPT_CASH;
   const mealAllowanceMonthly = round2(
-    Math.min(mealAllowancePerDay, MEAL_ALLOWANCE_EXEMPT_CASH) * WORKING_DAYS_PER_MONTH
+    Math.min(mealAllowancePerDay, mealExemptLimit) * WORKING_DAYS_PER_MONTH
   );
   const totalNetMonthly = round2(netMonthly + mealAllowanceMonthly);
 
@@ -500,4 +505,5 @@ export const CONSTANTS = {
   COEFFICIENT_SALES,
   SPECIFIC_DEDUCTION_ANNUAL,
   MEAL_ALLOWANCE_EXEMPT_CASH,
+  MEAL_ALLOWANCE_EXEMPT_CARD,
 };
