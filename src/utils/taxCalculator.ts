@@ -61,7 +61,9 @@ export interface EmployedResult {
   irsWithholding: number;
   irsJovemDiscount: number;
   netMonthly: number;
-  mealAllowanceMonthly: number;
+  mealAllowanceMonthly: number;   // Full meal allowance received
+  mealExemptMonthly: number;      // Tax-free portion
+  mealTaxableMonthly: number;     // Excess above exempt limit (subject to IRS+SS)
   totalNetMonthly: number;
 
   // Annual
@@ -70,6 +72,7 @@ export interface EmployedResult {
   irsAnnual: number;
   netAnnual: number;
   mealAllowanceAnnual: number;
+  mealTaxableAnnual: number;
   totalNetAnnual: number;
 
   // Employer costs
@@ -320,11 +323,22 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
   const otherTaxable = Math.max(0, otherTaxableIncome || 0);
   const totalGrossMonthly = round2(grossMonthly + otherTaxable);
 
-  // Social Security (employee) — applied to total gross
-  const ssEmployee = round2(totalGrossMonthly * SS_EMPLOYEE_RATE);
+  // Meal allowance: full amount received, excess above exempt limit is taxable
+  const mealExemptLimit = mealAllowanceType === 'card'
+    ? MEAL_ALLOWANCE_EXEMPT_CARD
+    : MEAL_ALLOWANCE_EXEMPT_CASH;
+  const mealAllowanceMonthly = round2(mealAllowancePerDay * WORKING_DAYS_PER_MONTH);
+  const mealExemptMonthly = round2(Math.min(mealAllowancePerDay, mealExemptLimit) * WORKING_DAYS_PER_MONTH);
+  const mealTaxableMonthly = round2(Math.max(0, mealAllowancePerDay - mealExemptLimit) * WORKING_DAYS_PER_MONTH);
 
-  // IRS withholding — applied to total GROSS salary (tables already account for SS)
-  let irsWithholding = calculateIrsWithholding(totalGrossMonthly, maritalStatus, dependents, region);
+  // Taxable gross = salary + supplements + meal taxable excess
+  const taxableGrossMonthly = round2(totalGrossMonthly + mealTaxableMonthly);
+
+  // Social Security (employee) — applied to taxable gross
+  const ssEmployee = round2(taxableGrossMonthly * SS_EMPLOYEE_RATE);
+
+  // IRS withholding — applied to taxable GROSS (tables already account for SS)
+  let irsWithholding = calculateIrsWithholding(taxableGrossMonthly, maritalStatus, dependents, region);
 
   // IRS Jovem discount
   let irsJovemDiscount = 0;
@@ -334,43 +348,39 @@ function calculateEmployed(input: SalaryInput): EmployedResult {
     irsWithholding = round2(irsWithholding - irsJovemDiscount);
   }
 
-  // Net monthly salary
-  const netMonthly = round2(totalGrossMonthly - ssEmployee - irsWithholding);
+  // Net = taxable income - deductions + exempt meal portion
+  const netMonthly = round2(taxableGrossMonthly - ssEmployee - irsWithholding);
+  const totalNetMonthly = round2(netMonthly + mealExemptMonthly);
 
-  // Meal allowance (exempt portion depends on cash vs card)
-  const mealExemptLimit = mealAllowanceType === 'card'
-    ? MEAL_ALLOWANCE_EXEMPT_CARD
-    : MEAL_ALLOWANCE_EXEMPT_CASH;
-  const mealAllowanceMonthly = round2(
-    Math.min(mealAllowancePerDay, mealExemptLimit) * WORKING_DAYS_PER_MONTH
-  );
-  const totalNetMonthly = round2(netMonthly + mealAllowanceMonthly);
-
-  // Annual calculations — base salary paid in 14/12 months, supplements paid in 12
+  // Annual calculations — base salary paid in 14/12 months, supplements + meal in 12
   const grossAnnual = round2(grossMonthly * numberOfMonths + otherTaxable * 12);
+  const mealAllowanceAnnual = round2(mealAllowanceMonthly * WORKING_MONTHS_FOR_MEAL);
+  const mealTaxableAnnual = round2(mealTaxableMonthly * WORKING_MONTHS_FOR_MEAL);
+  const mealExemptAnnual = round2(mealExemptMonthly * WORKING_MONTHS_FOR_MEAL);
+  const taxableGrossAnnual = round2(grossAnnual + mealTaxableAnnual);
   const ssAnnualEmployee = round2(ssEmployee * numberOfMonths);
   const irsAnnual = round2(irsWithholding * numberOfMonths);
-  const netAnnual = round2(grossAnnual - ssAnnualEmployee - irsAnnual);
-  const mealAllowanceAnnual = round2(mealAllowanceMonthly * WORKING_MONTHS_FOR_MEAL);
-  const totalNetAnnual = round2(netAnnual + mealAllowanceAnnual);
+  const netAnnual = round2(taxableGrossAnnual - ssAnnualEmployee - irsAnnual);
+  const totalNetAnnual = round2(netAnnual + mealExemptAnnual);
 
-  // Employer costs
-  const ssEmployer = round2(totalGrossMonthly * SS_EMPLOYER_RATE);
+  // Employer costs (on taxable gross)
+  const ssEmployer = round2(taxableGrossMonthly * SS_EMPLOYER_RATE);
   const ssEmployerAnnual = round2(ssEmployer * numberOfMonths);
-  const totalEmployerCostAnnual = round2(grossAnnual + ssEmployerAnnual);
+  const totalEmployerCostAnnual = round2(grossAnnual + mealTaxableAnnual + ssEmployerAnnual);
 
   // Effective rates
-  const irsRate = totalGrossMonthly > 0 ? irsWithholding / totalGrossMonthly : 0;
-  const effectiveIrsRate = grossAnnual > 0 ? irsAnnual / grossAnnual : 0;
-  const effectiveTotalRate = grossAnnual > 0 ? (irsAnnual + ssAnnualEmployee) / grossAnnual : 0;
+  const irsRate = taxableGrossMonthly > 0 ? irsWithholding / taxableGrossMonthly : 0;
+  const effectiveIrsRate = taxableGrossAnnual > 0 ? irsAnnual / taxableGrossAnnual : 0;
+  const effectiveTotalRate = taxableGrossAnnual > 0 ? (irsAnnual + ssAnnualEmployee) / taxableGrossAnnual : 0;
 
   return {
     type: 'employed',
     grossMonthly, otherTaxableIncome: otherTaxable, totalGrossMonthly,
     ssEmployee, irsWithholding, irsJovemDiscount, netMonthly,
-    mealAllowanceMonthly, totalNetMonthly,
+    mealAllowanceMonthly, mealExemptMonthly, mealTaxableMonthly,
+    totalNetMonthly,
     grossAnnual, ssAnnualEmployee, irsAnnual, netAnnual,
-    mealAllowanceAnnual, totalNetAnnual,
+    mealAllowanceAnnual, mealTaxableAnnual, totalNetAnnual,
     ssEmployer, ssEmployerAnnual, totalEmployerCostAnnual,
     effectiveIrsRate, effectiveTotalRate,
     ssRate: SS_EMPLOYEE_RATE, irsRate,

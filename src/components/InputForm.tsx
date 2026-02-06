@@ -90,6 +90,22 @@ export default function InputForm({ input, onChange }: InputFormProps) {
           />
           <span className="input-suffix">€</span>
         </div>
+        <input
+          type="range"
+          className="salary-slider"
+          min="820"
+          max="10000"
+          step="10"
+          value={input.grossMonthly}
+          onChange={(e) => update('grossMonthly', Number(e.target.value))}
+          style={{
+            '--slider-progress': `${((input.grossMonthly - 820) / (10000 - 820)) * 100}%`,
+          } as React.CSSProperties}
+        />
+        <div className="slider-labels">
+          <span>€820</span>
+          <span>€10 000</span>
+        </div>
         {isCompare && (
           <span className="form-hint">O mesmo valor bruto será usado para ambos os cenários</span>
         )}
