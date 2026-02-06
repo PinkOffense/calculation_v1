@@ -191,7 +191,7 @@ function SelfEmployedResults({ result }: { result: SelfEmployedResult }) {
         <div className="breakdown-row deduction">
           <span className="breakdown-label">
             <span className="dot" style={{ backgroundColor: '#ff8fa3' }} />
-            Seg. Social ({formatPercent(result.ssRate)} s/ {formatPercent(0.70)})
+            Seg. Social ({formatPercent(result.ssRate)} s/ {formatPercent(result.grossMonthly > 0 ? result.ssBase / result.grossMonthly : 0)})
           </span>
           <span className="breakdown-value negative">- {formatCurrency(ss)}</span>
         </div>
@@ -231,7 +231,7 @@ function SelfEmployedResults({ result }: { result: SelfEmployedResult }) {
           </div>
         )}
         <div className="employer-row">
-          <span>Base SS mensal (70%)</span>
+          <span>Base SS mensal ({result.grossMonthly > 0 ? formatPercent(result.ssBase / result.grossMonthly) : '—'})</span>
           <span>{formatCurrency(result.ssBase)}</span>
         </div>
       </div>
