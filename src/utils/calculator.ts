@@ -161,7 +161,7 @@ function calculateEmployed(input: SalaryInput, cfg: CalcConfig): EmployedResult 
   // Employer costs
   const ssEmployer = round2(taxableGrossMonthly * cfg.ssEmployerRate);
   const ssEmployerAnnual = round2(ssEmployer * numberOfMonths);
-  const totalEmployerCostAnnual = round2(grossAnnual + mealTaxableAnnual + ssEmployerAnnual);
+  const totalEmployerCostAnnual = round2(grossAnnual + mealAllowanceAnnual + ssEmployerAnnual);
 
   const irsRate = taxableGrossMonthly > 0 ? irsWithholding / taxableGrossMonthly : 0;
   const effectiveIrsRate = taxableGrossAnnual > 0 ? irsAnnual / taxableGrossAnnual : 0;
@@ -289,7 +289,8 @@ function calculateComparison(input: SalaryInput, cfg: CalcConfig): ComparisonRes
 
 export function calculateSalary(input: SalaryInput, tables?: TaxTables): SalaryResult {
   const cfg = resolveConfig(tables);
-  if (input.employmentType === 'compare') return calculateComparison(input, cfg);
-  if (input.employmentType === 'self_employed') return calculateSelfEmployed(input, cfg);
-  return calculateEmployed(input, cfg);
+  const safeInput = { ...input, grossMonthly: Math.max(0, input.grossMonthly) };
+  if (safeInput.employmentType === 'compare') return calculateComparison(safeInput, cfg);
+  if (safeInput.employmentType === 'self_employed') return calculateSelfEmployed(safeInput, cfg);
+  return calculateEmployed(safeInput, cfg);
 }

@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import InputForm from './components/InputForm';
-import ResultsPanel from './components/ResultsPanel';
-import { calculateSalary } from './utils/taxCalculator';
-import type { SalaryInput } from './utils/taxCalculator';
+import InputForm from './components/form';
+import ResultsPanel from './components/results';
+import { calculateSalary } from './utils';
+import type { SalaryInput } from './utils';
 import { useTaxTables } from './hooks/useTaxTables';
 import './App.css';
 

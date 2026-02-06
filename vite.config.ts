@@ -19,10 +19,7 @@ export default defineConfig({
         'src/test/**',
         'src/**/*.test.*',
         'src/**/index.ts',          // barrel re-exports
-        'src/utils/taxCalculator.ts', // backward-compat re-export
         'src/utils/types.ts',        // type-only file (no runtime code)
-        'src/components/InputForm.tsx',   // re-export shim
-        'src/components/ResultsPanel.tsx', // re-export shim
       ],
       thresholds: {
         branches: 75,
