@@ -29,7 +29,7 @@ function calculateIrsWithholding(
   const brackets = getBrackets(maritalStatus);
   const depDeduction = getDependentDeduction(maritalStatus);
 
-  let bracket = brackets.find(b => grossMonthly <= b.upTo);
+  const bracket = brackets.find(b => grossMonthly <= b.upTo);
   if (!bracket || bracket.rate === 0) return 0;
 
   let withholding = grossMonthly * bracket.rate - bracket.deduction;
