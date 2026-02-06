@@ -25,7 +25,11 @@ export default function DonutChart({ segments, centerLabel, centerValue, size = 
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;
 
-  let cumulativeOffset = 0;
+  // Pre-compute cumulative offsets to avoid mutation during render
+  const offsets = segments.reduce<number[]>((acc, _segment, i) => {
+    acc.push(i === 0 ? 0 : acc[i - 1] + segments[i - 1].value / total);
+    return acc;
+  }, []);
 
   return (
     <div className="donut-chart-container">
@@ -43,8 +47,7 @@ export default function DonutChart({ segments, centerLabel, centerValue, size = 
         {segments.map((segment, i) => {
           const ratio = segment.value / total;
           const dashLength = circumference * ratio;
-          const dashOffset = circumference * cumulativeOffset;
-          cumulativeOffset += ratio;
+          const dashOffset = circumference * offsets[i];
           const isHovered = hovered === i;
 
           return (
