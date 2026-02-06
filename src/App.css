@@ -1578,3 +1578,57 @@ body {
     height: 14px;
   }
 }
+
+/* ============================================================
+   PDF Export Button
+   ============================================================ */
+.pdf-export-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  margin-top: 1.5rem;
+  border: 1.5px solid var(--rose-200);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--rose-50), white);
+  color: var(--rose-500);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pdf-export-btn:hover {
+  background: linear-gradient(135deg, var(--rose-100), var(--rose-50));
+  border-color: var(--rose-300);
+  box-shadow: 0 4px 16px rgba(232, 67, 111, 0.15);
+  transform: translateY(-1px);
+}
+
+.pdf-export-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.pdf-export-btn svg {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Version Info (footer)
+   ============================================================ */
+.version-info {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--rose-400);
+  background: rgba(232, 67, 111, 0.05);
+  border: 1px solid rgba(232, 67, 111, 0.1);
+  border-radius: 999px;
+  display: inline-block;
+  padding: 0.25rem 0.875rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.01em;
+}

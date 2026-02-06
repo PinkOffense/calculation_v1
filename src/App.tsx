@@ -3,6 +3,7 @@ import InputForm from './components/InputForm';
 import ResultsPanel from './components/ResultsPanel';
 import { calculateSalary } from './utils/taxCalculator';
 import type { SalaryInput } from './utils/taxCalculator';
+import { useTaxTables } from './hooks/useTaxTables';
 import './App.css';
 
 const defaultInput: SalaryInput = {
@@ -28,8 +29,14 @@ const defaultInput: SalaryInput = {
 
 function App() {
   const [input, setInput] = useState<SalaryInput>(defaultInput);
+  const taxTables = useTaxTables();
 
   const result = useMemo(() => calculateSalary(input), [input]);
+
+  const versionLabel = taxTables.version
+    ? `Tabelas IRS ${taxTables.tables?.year ?? 2026} · v${taxTables.version}`
+    : null;
+  const sourceLabel = taxTables.tables?.source ?? 'Despacho n.º 233-A/2026';
 
   return (
     <div className="app">
@@ -58,10 +65,15 @@ function App() {
 
       <main className="app-main">
         <InputForm input={input} onChange={setInput} />
-        <ResultsPanel result={result} />
+        <ResultsPanel result={result} input={input} />
       </main>
 
       <footer className="app-footer">
+        {versionLabel && (
+          <p className="version-info">
+            {versionLabel} · {sourceLabel}
+          </p>
+        )}
         <p>
           Valores indicativos baseados nas tabelas de retenção IRS 2026 (Despacho n.º 233-A/2026).
           Inclui regras para Continente, Açores e Madeira.
