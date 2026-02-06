@@ -2,9 +2,15 @@ import { useState } from 'react';
 import type { SalaryResult, EmployedResult, SelfEmployedResult, ComparisonResult } from '../utils/taxCalculator';
 import { formatCurrency, formatPercent } from '../utils/taxCalculator';
 import DonutChart from './DonutChart';
+import { useAnimatedValue } from '../hooks/useAnimatedValue';
 
 interface ResultsPanelProps {
   result: SalaryResult;
+}
+
+function AnimatedCurrency({ value }: { value: number }) {
+  const animated = useAnimatedValue(value);
+  return <>{formatCurrency(animated)}</>;
 }
 
 function EmployedResults({ result }: { result: EmployedResult }) {
@@ -17,16 +23,15 @@ function EmployedResults({ result }: { result: EmployedResult }) {
   const irs = m ? result.irsWithholding : result.irsAnnual;
   const net = m ? result.netMonthly : result.netAnnual;
   const meal = m ? result.mealAllowanceMonthly : result.mealAllowanceAnnual;
+  const mealTaxable = m ? result.mealTaxableMonthly : result.mealTaxableAnnual;
+  const mealExempt = m ? result.mealExemptMonthly : (result.mealAllowanceAnnual - result.mealTaxableAnnual);
   const totalNet = m ? result.totalNetMonthly : result.totalNetAnnual;
 
   const donutSegments = [
-    { label: 'Salário Líquido', value: net, color: '#e8436f' },
+    { label: 'Salário Líquido', value: net + mealExempt, color: '#e8436f' },
     { label: 'Seg. Social (11%)', value: ss, color: '#ff8fa3' },
     { label: 'IRS', value: irs, color: '#2d2d3f' },
   ];
-  if (meal > 0) {
-    donutSegments.splice(1, 0, { label: 'Sub. Alimentação', value: meal, color: '#ffb3c1' });
-  }
 
   return (
     <>
@@ -40,12 +45,13 @@ function EmployedResults({ result }: { result: EmployedResult }) {
 
       <div className="net-salary-hero">
         <span className="hero-label">Salário Líquido {m ? 'Mensal' : 'Anual'}</span>
-        <span className="hero-value animate-value" key={`e-${view}-${totalNet}`}>
-          {formatCurrency(totalNet)}
+        <span className="hero-value">
+          <AnimatedCurrency value={totalNet} />
         </span>
         {meal > 0 && (
           <span className="hero-subtitle">
-            {formatCurrency(net)} + {formatCurrency(meal)} sub. alimentação
+            incl. {formatCurrency(meal)} sub. alimentação
+            {mealTaxable > 0 && <> ({formatCurrency(mealExempt)} isento + {formatCurrency(mealTaxable)} tributável)</>}
           </span>
         )}
         {result.irsJovemDiscount > 0 && (
@@ -76,6 +82,13 @@ function EmployedResults({ result }: { result: EmployedResult }) {
             </span>
           </div>
         )}
+        {mealTaxable > 0 && (
+          <div className="breakdown-row sub-detail">
+            <span className="breakdown-label">
+              + Sub. alimentação tributável: {formatCurrency(mealTaxable)}
+            </span>
+          </div>
+        )}
         <div className="breakdown-divider" />
         <div className="breakdown-row deduction">
           <span className="breakdown-label">
@@ -100,15 +113,15 @@ function EmployedResults({ result }: { result: EmployedResult }) {
           <div className="breakdown-row meal">
             <span className="breakdown-label">
               <span className="dot" style={{ backgroundColor: '#ffb3c1' }} />
-              Sub. Alimentação
+              Sub. Alimentação {mealTaxable > 0 ? '(isento)' : ''}
             </span>
-            <span className="breakdown-value positive">+ {formatCurrency(meal)}</span>
+            <span className="breakdown-value positive">+ {formatCurrency(mealExempt)}</span>
           </div>
         )}
         <div className="breakdown-divider accent" />
         <div className="breakdown-row total">
           <span className="breakdown-label">Total Líquido</span>
-          <span className="breakdown-value">{formatCurrency(totalNet)}</span>
+          <span className="breakdown-value"><AnimatedCurrency value={totalNet} /></span>
         </div>
       </div>
 
@@ -169,8 +182,8 @@ function SelfEmployedResults({ result }: { result: SelfEmployedResult }) {
 
       <div className="net-salary-hero">
         <span className="hero-label">Rendimento Líquido {m ? 'Mensal' : 'Anual'}</span>
-        <span className="hero-value animate-value" key={`s-${view}-${net}`}>
-          {formatCurrency(net)}
+        <span className="hero-value">
+          <AnimatedCurrency value={net} />
         </span>
         <span className="hero-subtitle">
           Após retenção IRS + Seg. Social
@@ -219,7 +232,7 @@ function SelfEmployedResults({ result }: { result: SelfEmployedResult }) {
         <div className="breakdown-divider accent" />
         <div className="breakdown-row total">
           <span className="breakdown-label">Rendimento Líquido</span>
-          <span className="breakdown-value">{formatCurrency(net)}</span>
+          <span className="breakdown-value"><AnimatedCurrency value={net} /></span>
         </div>
       </div>
 
@@ -298,7 +311,7 @@ function ComparisonResults({ result }: { result: ComparisonResult }) {
   const empIRS = m ? emp.irsWithholding : emp.irsAnnual;
   const seIRS = m ? se.irsWithholding : se.irsAnnual;
 
-  const empMeal = m ? emp.mealAllowanceMonthly : emp.mealAllowanceAnnual;
+  const empMeal = m ? emp.mealExemptMonthly : (emp.mealAllowanceAnnual - emp.mealTaxableAnnual);
 
   const seVat = m ? se.vatCollected : se.vatAnnual;
 
@@ -352,8 +365,8 @@ function ComparisonResults({ result }: { result: ComparisonResult }) {
             </svg>
           </span>
           <span className="comp-hero-title">Conta de Outrem</span>
-          <span className="comp-hero-value animate-value" key={`ce-${view}-${empNet}`}>
-            {formatCurrency(empNet)}
+          <span className="comp-hero-value">
+            <AnimatedCurrency value={empNet} />
           </span>
           {empMeal > 0 && (
             <span className="comp-hero-sub">incl. {formatCurrency(empMeal)} sub. alim.</span>
@@ -370,8 +383,8 @@ function ComparisonResults({ result }: { result: ComparisonResult }) {
             </svg>
           </span>
           <span className="comp-hero-title">Independente</span>
-          <span className="comp-hero-value animate-value" key={`cs-${view}-${seNet}`}>
-            {formatCurrency(seNet)}
+          <span className="comp-hero-value">
+            <AnimatedCurrency value={seNet} />
           </span>
           <span className="comp-hero-sub">após IRS + SS{seVat > 0 ? ' + IVA' : ''}</span>
         </div>
