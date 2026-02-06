@@ -72,15 +72,11 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        {versionLabel && (
-          <p className="version-info">
-            {versionLabel} · {sourceLabel}
-          </p>
-        )}
         <p>
-          Valores indicativos baseados nas tabelas de retenção IRS 2026 (Despacho n.º 233-A/2026).
-          Inclui regras para Continente, Açores e Madeira.
+          Valores indicativos baseados nas tabelas de retenção IRS {taxTables.tables?.year ?? 2026} ({sourceLabel}).
+          {versionLabel && <> · {versionLabel}</>}
           <br />
+          Inclui regras para Continente, Açores e Madeira.
           Consulte sempre um contabilista para situações específicas.
         </p>
       </footer>
