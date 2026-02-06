@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ResultsPanel from '../ResultsPanel';
+import ResultsPanel from '../results';
 import { calculateSalary } from '../../utils';
 import { createInput } from '../../test/fixtures';
 import type { EmployedResult, SelfEmployedResult, ComparisonResult } from '../../utils';

@@ -1,0 +1,53 @@
+/* ========================================
+   CSS Custom Properties — Design Tokens
+   ======================================== */
+
+:root {
+  /* Rose/Red palette */
+  --rose-50: #fff0f3;
+  --rose-100: #ffe0e6;
+  --rose-200: #ffb3c1;
+  --rose-300: #ff8fa3;
+  --rose-400: #e8436f;
+  --rose-500: #d6336c;
+  --rose-600: #c2255c;
+  --rose-700: #a61e4d;
+
+  /* Purple accent */
+  --purple-400: #8b5cf6;
+  --purple-500: #7c3aed;
+
+  /* Neutrals */
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #e8e8ed;
+  --gray-300: #d1d1d6;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
+  --gray-800: #2d2d3f;
+  --gray-900: #1a1a2e;
+
+  /* Semantic */
+  --bg-primary: #f0eef6;
+  --bg-card: rgba(255, 255, 255, 0.72);
+  --bg-card-solid: #ffffff;
+  --accent: var(--rose-400);
+  --accent-light: var(--rose-200);
+  --accent-soft: var(--rose-50);
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-500);
+  --text-muted: var(--gray-400);
+  --border: rgba(255, 255, 255, 0.5);
+  --border-outer: rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-accent: 0 4px 24px rgba(232, 67, 111, 0.18);
+  --shadow-glow: 0 0 30px rgba(232, 67, 111, 0.12);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+}

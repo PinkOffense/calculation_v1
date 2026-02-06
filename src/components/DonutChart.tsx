@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatCurrency, formatPercent } from '../utils/taxCalculator';
+import { formatCurrency, formatPercent } from '../utils';
 
 interface DonutSegment {
   label: string;

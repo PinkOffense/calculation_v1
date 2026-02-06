@@ -1,0 +1,520 @@
+/* ========================================
+   Results Panel, Chart, Breakdown, Rates
+   ======================================== */
+
+/* ---- Results Header ---- */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.results-header h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-toggle button {
+  padding: 0.375rem 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.view-toggle button.active {
+  background: white;
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.view-toggle button:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+/* ---- Hero Net Salary ---- */
+.net-salary-hero {
+  text-align: center;
+  padding: 1.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, var(--rose-50), var(--rose-100), rgba(139, 92, 246, 0.05));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--rose-200);
+  position: relative;
+  overflow: hidden;
+}
+
+.net-salary-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 50%, rgba(232, 67, 111, 0.06) 0%, transparent 50%);
+  animation: heroShimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes heroShimmer {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10%, -5%); }
+}
+
+.hero-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.375rem;
+  position: relative;
+}
+
+.hero-value {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  position: relative;
+}
+
+.hero-subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.375rem;
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-block;
+  margin-top: 0.625rem;
+  padding: 0.3rem 0.875rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--rose-600);
+  background: rgba(232, 67, 111, 0.08);
+  border: 1px solid rgba(232, 67, 111, 0.15);
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  position: relative;
+  animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 67, 111, 0.1); }
+  50% { box-shadow: 0 0 0 6px rgba(232, 67, 111, 0); }
+}
+
+/* Value change animation */
+.animate-value {
+  animation: valuePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes valuePopIn {
+  0% { transform: scale(0.88); opacity: 0.4; filter: blur(2px); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+/* ---- Donut Chart ---- */
+.donut-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.donut-chart-container svg {
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.06));
+}
+
+.donut-segment {
+  animation: donutDraw 0.8s ease-out forwards;
+  transform-origin: center;
+}
+
+@keyframes donutDraw {
+  from {
+    stroke-dasharray: 0 503;
+    opacity: 0;
+  }
+}
+
+.donut-center-label {
+  font-size: 11px;
+  fill: var(--gray-400);
+  font-weight: 500;
+}
+
+.donut-center-value {
+  font-size: 15px;
+  fill: var(--gray-800);
+  font-weight: 700;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.legend-item:hover,
+.legend-item.hovered {
+  background: var(--gray-50);
+  transform: translateX(2px);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.legend-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-percent {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 3rem;
+  text-align: right;
+}
+
+/* ---- Breakdown Table ---- */
+.breakdown-table {
+  margin-bottom: 1.5rem;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.breakdown-row.sub-detail {
+  padding: 0 0 0.25rem;
+}
+
+.breakdown-row.sub-detail .breakdown-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.breakdown-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.breakdown-label .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.breakdown-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-value.negative {
+  color: var(--gray-600);
+}
+
+.breakdown-value.positive {
+  color: var(--rose-400);
+}
+
+.breakdown-row.gross .breakdown-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.breakdown-row.net .breakdown-value {
+  color: var(--rose-500);
+  font-size: 1rem;
+}
+
+.breakdown-row.total {
+  padding-top: 0.75rem;
+}
+
+.breakdown-row.total .breakdown-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.breakdown-row.total .breakdown-value {
+  font-size: 1.125rem;
+  color: var(--rose-400);
+  font-weight: 700;
+}
+
+.breakdown-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 0.25rem 0;
+}
+
+.breakdown-divider.accent {
+  background: linear-gradient(90deg, var(--rose-200), var(--rose-100), transparent);
+  height: 2px;
+}
+
+/* ---- Employer Section ---- */
+.employer-section {
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--gray-200);
+}
+
+.employer-section h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.employer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0;
+}
+
+.employer-row.total {
+  border-top: 1px solid var(--gray-200);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---- Rate Cards ---- */
+.rates-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.rate-card {
+  text-align: center;
+  padding: 1.125rem;
+  background: linear-gradient(135deg, var(--rose-50), white);
+  border: 1px solid var(--rose-100);
+  border-radius: var(--radius-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-accent);
+  border-color: var(--rose-200);
+}
+
+.rate-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.rate-label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 0.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+/* ---- Equivalence Card ---- */
+.equivalence-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, var(--rose-50), var(--rose-100));
+  border: 1px solid var(--rose-200);
+  border-radius: var(--radius-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.equivalence-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-accent);
+}
+
+.equivalence-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.equivalence-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.equivalence-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.equivalence-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.equivalence-hint {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* ---- PDF Export Button ---- */
+.pdf-export-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  margin-top: 1.5rem;
+  border: 1.5px solid var(--rose-200);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--rose-50), white);
+  color: var(--rose-500);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pdf-export-btn:hover {
+  background: linear-gradient(135deg, var(--rose-100), var(--rose-50));
+  border-color: var(--rose-300);
+  box-shadow: 0 4px 16px rgba(232, 67, 111, 0.15);
+  transform: translateY(-1px);
+}
+
+.pdf-export-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.pdf-export-btn svg {
+  flex-shrink: 0;
+}
+
+/* ---- Responsive Results ---- */
+@media (max-width: 768px) {
+  .hero-value {
+    font-size: 2rem;
+  }
+
+  .equivalence-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .equivalence-value {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-value {
+    font-size: 1.75rem;
+  }
+
+  .rates-section {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .rate-card {
+    padding: 0.875rem;
+  }
+
+  .rate-value {
+    font-size: 1.25rem;
+  }
+}
