@@ -6,12 +6,20 @@ import type { SalaryInput } from './utils/taxCalculator';
 import './App.css';
 
 const defaultInput: SalaryInput = {
+  employmentType: 'employed',
   grossMonthly: 1500,
   dependents: 0,
   maritalStatus: 'single',
   hasDisability: false,
+  region: 'continente',
   mealAllowancePerDay: 6.0,
   numberOfMonths: 14,
+  irsJovem: false,
+  irsJovemYear: 1,
+  activityType: 'services',
+  vatRegime: 'exempt_art53',
+  fiscalRegime: 'simplified',
+  monthlyExpenses: 0,
 };
 
 function App() {
@@ -21,7 +29,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Animated background blobs */}
       <div className="bg-blob blob-1" />
       <div className="bg-blob blob-2" />
       <div className="bg-blob blob-3" />
@@ -52,7 +59,8 @@ function App() {
 
       <footer className="app-footer">
         <p>
-          Valores indicativos baseados nas tabelas de retenção IRS 2025 para Portugal Continental.
+          Valores indicativos baseados nas tabelas de retenção IRS 2025.
+          Inclui regras para Continente, Açores e Madeira.
           <br />
           Consulte sempre um contabilista para situações específicas.
         </p>

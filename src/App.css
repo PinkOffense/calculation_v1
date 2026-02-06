@@ -745,3 +745,203 @@ body {
     font-size: 1.125rem;
   }
 }
+
+/* ============================================================
+   NEW: Employment Type Toggle
+   ============================================================ */
+.employment-toggle {
+  display: flex;
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.employment-toggle button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.employment-toggle button.active {
+  background: white;
+  color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.employment-toggle button:hover:not(.active) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.employment-toggle button svg {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   NEW: Form Section Title (for self-employed)
+   ============================================================ */
+.form-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 1.25rem 0 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* ============================================================
+   NEW: Hint Boxes
+   ============================================================ */
+.form-hint-box {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--gray-50);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  border-left: 3px solid var(--gray-300);
+}
+
+.form-hint-box.info {
+  border-left-color: var(--accent-light);
+  background: var(--rose-50);
+  color: var(--text-secondary);
+}
+
+/* ============================================================
+   NEW: IRS Jovem year selector (animated appear)
+   ============================================================ */
+.irs-jovem-year {
+  animation: slideDown 0.25s ease-out;
+  padding-left: 1.75rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   NEW: Hero Badge (IRS Jovem savings)
+   ============================================================ */
+.hero-badge {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--rose-600);
+  background: rgba(232, 67, 111, 0.1);
+  border: 1px solid rgba(232, 67, 111, 0.2);
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   NEW: Equivalence Card (self-employed comparison)
+   ============================================================ */
+.equivalence-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, var(--rose-50), var(--rose-100));
+  border: 1px solid var(--rose-200);
+  border-radius: var(--radius-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.equivalence-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-accent);
+}
+
+.equivalence-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.equivalence-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.equivalence-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.equivalence-value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.equivalence-hint {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   Responsive additions
+   ============================================================ */
+@media (max-width: 768px) {
+  .employment-toggle button {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .equivalence-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .equivalence-value {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .employment-toggle {
+    margin-bottom: 1rem;
+  }
+}
